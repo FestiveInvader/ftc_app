@@ -27,17 +27,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.Teleop;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import java.util.List;
+
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+
+import java.util.List;
 
 /**
  * This 2018-2019 OpMode illustrates the basics of using the TensorFlow Object Detection API to
@@ -49,8 +50,8 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@TeleOp(name = "Concept: TensorFlow Object Detection", group = "Concept")
-public class ConceptTensorFlowObjectDetection extends LinearOpMode {
+@TeleOp(name = "My TensorFlow Object Detection", group = "Concept")
+public class MyConceptTFObjectDetection extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -115,30 +116,30 @@ public class ConceptTensorFlowObjectDetection extends LinearOpMode {
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {
                       telemetry.addData("# Object Detected", updatedRecognitions.size());
+                      if (updatedRecognitions.size() == 3) {
                         int goldMineralX = -1;
                         int silverMineral1X = -1;
                         int silverMineral2X = -1;
                         for (Recognition recognition : updatedRecognitions) {
-                            if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                                goldMineralX = (int) recognition.getLeft();
-                            } else if (silverMineral1X == -1) {
-                                silverMineral1X = (int) recognition.getLeft();
-                            } else {
-                                silverMineral2X = (int) recognition.getLeft();
-                            }
+                          if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                            goldMineralX = (int) recognition.getLeft();
+                          } else if (silverMineral1X == -1) {
+                            silverMineral1X = (int) recognition.getLeft();
+                          } else {
+                            silverMineral2X = (int) recognition.getLeft();
+                          }
                         }
                         if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                            if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                                telemetry.addData("Gold Mineral Position", "Left");
-                            } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                telemetry.addData("Gold Mineral Position", "Right");
-                            } else {
-                                telemetry.addData("Gold Mineral Position", "Center");
-                            }
+                          if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                            telemetry.addData("Gold Mineral Position", "Left");
+                          } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
+                            telemetry.addData("Gold Mineral Position", "Right");
+                          } else {
+                            telemetry.addData("Gold Mineral Position", "Center");
+                          }
                             telemetry.addData("Gold X pos", goldMineralX);
-                            telemetry.addData("Silver1 X pos", silverMineral1X);
-                            telemetry.addData("Silver2 X pos", silverMineral2X);
                         }
+                      }
                       telemetry.update();
                     }
                 }

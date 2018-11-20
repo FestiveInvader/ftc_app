@@ -9,6 +9,7 @@ public class BaseAuton extends DeclarationsAutonomous {
         while(hangSlideIsExtended()&& opModeIsActive()){
             unextendHangSlide();
         }
+
         endAuto();
     }
 }

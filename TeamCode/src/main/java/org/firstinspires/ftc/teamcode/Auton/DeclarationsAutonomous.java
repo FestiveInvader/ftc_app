@@ -12,12 +12,17 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+
+import java.util.List;
 
 //@Author Eric Adams, Team 8417 'Lectric Legends
 
@@ -61,7 +66,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangingPulleyDiameter = 1.1;
     double hangingGearRatio = 60/40;
     double ticksPerHangingRev = rev40TicksPerRev*hangingGearRatio;
-    double ticksPerHangingInch =  ticksPerHangingRev / ((hangingPulleyDiameter * 3.1415)/hangingGearRatio);
+
+    double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
     double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
     double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
@@ -84,9 +90,17 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double stayOnHeading = 84.17;
 
 
+    private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
+    private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
+    private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
+    private static final String VUFORIA_KEY = "Ad2+xnL/////AAABmfD+XRaqfERPmvnHPZzg8b5xA35SCU5QWgaygrkAKRjWp+n" +
+            "searSU8Zriv5xsNvOm3cLWfUa7gXGF1h09LWDH6+0QrZ6WVl11ygsh5wTa8IyIZGaPqHG9FjsccPCzNtSPpLZj3vpS4K797weILM" +
+            "vElMa4xrSb/xSyn5zWwGEg5H931imaB8yFDkV7LIAxRJgfORqJcrOQ4WVjr6GxEVj2mjNkHNCKF57C1yyY8CYit5BcgDAkz4bosZ" +
+            "0jPpvwCks1+trrm5kP+NIj6y49SD+NZh85IUiEITB9ebw49pvA9M8fki18jLYDIexUZ7fnCFj8oBGGnc0CCispwE2ST7ddUDo4" +
+            "GmrSSkNLfUrDMjapPpK\n";
+    private VuforiaLocalizer vuforia;
+    private TFObjectDetector tfod;
 
-    VuforiaLocalizer vuforia;
-    //VuforiaHardware vuforiaHardware;
     public ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -114,10 +128,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
         ArmPot = hardwareMap.analogInput.get("ArmPot");
 
-        LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
-        LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
-        RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
-        RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+        LeftTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        LeftBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+        RightTop.setDirection(DcMotorSimple.Direction.FORWARD);
+        RightBottom.setDirection(DcMotorSimple.Direction.REVERSE);
         HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
         LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -144,7 +158,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //vuforiaHardware = new VuforiaHardware();
         //vuforiaHardware.Init(hardwareMap);
 
-        ElapsedTime timer = new ElapsedTime();
+        initVuforia();
+        telemetry.addData("Vuforia Init'd", true);
+        telemetry.update();
+
+        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
+            initTfod();
+        } else {
+            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+        }
+
         while(!isStarted()) {
             telemetry.addData("IMU", getHeading());
             telemetry.addData("FrontLeft Encoder", LeftTop.getCurrentPosition());
@@ -152,7 +175,31 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.addData("If I don't put this here then it'll probably crash", 1);
             telemetry.update();
         }
+        ElapsedTime timer = new ElapsedTime();
     }
+    //Start TensorFlow functions (not movement based on TF)
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
+
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // Loading trackables is not necessary for the Tensor Flow Object Detection engine.
+    }
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
+    }
+    //End TensorFlow functions (not movement based on TF)
 
     // Start General movement functions
     public void drive(double speed, int direction, double time){
@@ -430,20 +477,98 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void unlatch(){
         HangingSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         int inchesToUnlatch = 26;
-        HangingSlide.setTargetPosition((int) ticksPerHangingInch * inchesToUnlatch);
+        HangingSlide.setTargetPosition((int) ticksPerHangingInch * -20);
         HangCamLeft.setPosition(hangCamLeftUnengagedPos);
         HangCamRight.setPosition(hangCamRightUnengagedPos);
-        HangingSlide.setPower(1);
-        sleep(5000);
-        EncoderDrive(.25, 6, forward, stayOnHeading, 5);
-        HangCamLeft.setPosition(hangCamLeftEngagedPos);
-        HangCamRight.setPosition(hangCamRightEngagedPos);
+        sleep(1000);
+        while(HangingSlide.isBusy()){
+            HangingSlide.setPower(1);
+        }
+        HangingSlide.setPower(0);
+    }
+    public void findSamplePosition(){
+        int goldPosition = 0;
+        if (opModeIsActive()) {
+            /** Activate Tensor Flow Object Detection. */
+            if (tfod != null) {
+                tfod.activate();
+            }
+            while (goldPosition == 0 && opModeIsActive()) {
+                if (tfod != null) {
+                    // getUpdatedRecognitions() will return null if no new information is available since
+                    // the last time that call was made.
+                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                    if (updatedRecognitions != null) {
+                        telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        int goldMineralX = -1;
+                        for (Recognition recognition : updatedRecognitions) {
+                            if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                goldMineralX = (int) recognition.getLeft();
+                            }
+                        }
+                        if (goldMineralX != -1){
+                            if(getHeading() > 5){
+                                goldPosition = 3;
+                                telemetry.addData("Gold is in Right Pos", goldPosition);
+                            }else if(getHeading() < -5){
+                                goldPosition = 2;
+                                telemetry.addData("Gold is in Left Pos", goldPosition);
+                            }else{
+                                goldPosition = 1;
+                                telemetry.addData("Gold is in Center Pos", goldPosition);
+                            }
+                        }
+                        telemetry.update();
+                    }
+                }
+                sleep(2500);
+            }
+           /* while (opModeIsActive()) {
+                if (tfod != null) {
+                    // getUpdatedRecognitions() will return null if no new information is available since
+                    // the last time that call was made.
+                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                    if (updatedRecognitions != null) {
+                        telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        if (updatedRecognitions.size() == 3) {
+                            int goldMineralX = -1;
+                            int silverMineral1X = -1;
+                            int silverMineral2X = -1;
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                    goldMineralX = (int) recognition.getLeft();
+                                } else if (silverMineral1X == -1) {
+                                    silverMineral1X = (int) recognition.getLeft();
+                                } else {
+                                    silverMineral2X = (int) recognition.getLeft();
+                                }
+                            }
+                            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
+                                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                                    telemetry.addData("Gold Mineral Position", "Left");
+                                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
+                                    telemetry.addData("Gold Mineral Position", "Right");
+                                } else {
+                                    telemetry.addData("Gold Mineral Position", "Center");
+                                }
+                                telemetry.addData("Gold X pos", goldMineralX);
+                            }
+                        }
+                        telemetry.update();
+                    }
+                }
+            }*/
+        }
+
+        if (tfod != null) {
+            tfod.shutdown();
+        }
     }
     public void unextendHangSlide(){
         //this is made so it can be in a loop by itself, or in another loop.
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         if(hangSlideIsExtended()){
-            HangingSlide.setPower(-.5);
+            HangingSlide.setPower(.5);
         }else{
             HangingSlide.setPower(0);
         }

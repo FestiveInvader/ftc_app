@@ -47,12 +47,16 @@ public class Teleop extends OpMode {
     public DigitalChannel HangSlideLimit;
     public AnalogInput ArmPot;
     double potMagicNumber = .01222;
+    double potRotation;
 
     // Declare Variables
     double leftPower = 0;
     double rightPower = 0;
-    double hangingMotorPower = 0;
+
+    double armPower = 0;
     double armSlidePower = 0;
+
+    double hangingMotorPower = 0;
     double intakePower = 0;
     double armRotatePower = 0;
 
@@ -89,7 +93,6 @@ public class Teleop extends OpMode {
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
 
         ArmPot = hardwareMap.analogInput.get("ArmPot");
-
         LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
         LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
         RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -99,6 +102,8 @@ public class Teleop extends OpMode {
         LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -125,8 +130,27 @@ public class Teleop extends OpMode {
 
     @Override
     public void loop() {
-        leftPower = gamepad1.left_stick_y;
-        rightPower = gamepad1.right_stick_y;
+        potRotation = ArmPot.getVoltage()/potMagicNumber;
+
+        if(potRotation <= 45) {
+            armPower = Range.clip(gamepad2.left_stick_y-.2, -1, 0);
+        }else if(potRotation < 50) {
+            armPower = Range.clip(gamepad2.left_stick_y, -1, 0);
+        }else if(potRotation >= 50 && potRotation <= 65){
+            armPower = Range.clip(gamepad2.left_stick_y, -1, .25);
+        }else if (potRotation >= 175 && potRotation <= 195){
+            armPower = Range.clip(gamepad2.left_stick_y, -.35, 1);
+        }else if (potRotation >= 195 && potRotation <=200){
+            armPower = Range.clip(gamepad2.left_stick_y, 0, 1);
+        }else if (potRotation >= 200){
+            armPower = Range.clip(gamepad2.left_stick_y+.2, 0, 1);
+        }else{
+            armPower = gamepad2.left_stick_y;
+        }
+
+        if(gamepad2.left_trigger > .1){
+            armPower = armPower * gamepad2.left_trigger;
+        }
 
         if(HangSlideLimit.getState() == false){
             //hanging slide is down
@@ -156,6 +180,9 @@ public class Teleop extends OpMode {
             intakePower = 0;
         }
 
+        leftPower = gamepad1.left_stick_y;
+        rightPower = gamepad1.right_stick_y;
+
         setPowers();
         doTelemetry();
     }
@@ -165,8 +192,13 @@ public class Teleop extends OpMode {
         LeftBottom.setPower(leftPower);
         RightTop.setPower(rightPower);
         RightBottom.setPower(rightPower);
-        HangingSlide.setPower(hangingMotorPower);
+
+        ArmTop.setPower(armPower);
+        ArmBottom.setPower(armPower);
         ArmSlide.setPower(armSlidePower);
+
+        HangingSlide.setPower(hangingMotorPower);
+
 
 
         IntakeLeft.setPower(intakePower);
