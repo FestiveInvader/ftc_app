@@ -82,7 +82,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    //empty is 0, grey is 1, brown is 2,
+    int goldPosition = 0;
 
     int forward = 1;
     int reverse = -1;
@@ -218,7 +218,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         stopDriveMotors();
     }
 
-    public void EncoderDrive(double speed, double Inches, int direction, double heading, double timeout) {
+    public void encoderDrive(double speed, double Inches, int direction, double heading, double timeout) {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
@@ -250,7 +250,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             stopDriveMotors();
         }
     }
-   /* public void EncoderDriveAccelDecel(double speed, double inches, double decelInches, int direction, double heading, double timeout){
+    public void EncoderDriveAccelDecel(double speed, double inches, double accelInches, double decelInches, int direction, double heading, double timeout){
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
@@ -265,34 +265,46 @@ public class DeclarationsAutonomous extends LinearOpMode {
         if (opModeIsActive() ) {
             //make sure that the encoder on the front left motor (which, stupidly, is the only motor
             //we use for distance in this function) is reset to 0
-            FrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            FrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            FrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            BackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            BackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            LeftTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            LeftTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            LeftBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            RightTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            RightBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             double power = 0;
             double error;
 
-            target = FrontLeft.getCurrentPosition() + (int) (inches * CountsPerInch * direction);
+            target = LeftTop.getCurrentPosition() + (int) (inches * CountsPerInch * direction);
+            double accelTicks = (int) (accelInches * CountsPerInch);
             double decelTicks = (int) (decelInches * CountsPerInch);
             //while the absolute value of the target minus the AV of the FL encoder value > 25 {
-            //if(AV of FL ecnoders < decelTicks position) {drive normally}
-            //else{set drive motor powers to .15, so that momentum from full speed means we decel}
-            //It's dirty, and doesn't actually technically decel, but this was thrown together
-            //the day before we left for Houston, so sue me
-            while(Math.abs(target) - Math.abs(FrontLeft.getCurrentPosition()) > 25 && runtime.seconds() < 28.5 && (startTime + timeout > runtime.seconds())) {
-                double motorPos = Math.abs(FrontLeft.getCurrentPosition());
+            //if(AV of TL ecnoders < accelTicks position) {Accel}
+            //else if{ AV of TL ecnoders > decel position
+            //else {drive normal}
+            while(Math.abs(target) - Math.abs(LeftTop.getCurrentPosition()) > 25 && runtime.seconds() < 28.5 && (startTime + timeout > runtime.seconds())) {
+                double motorPos = Math.abs(LeftTop.getCurrentPosition());
+                unextendHangSlide();
                 error = Math.abs(target) - Math.abs(motorPos);
-                //decel
-                if(Math.abs(motorPos) < Math.abs(target) - Math.abs(decelTicks)){
-                    gyroDrive(Heading, speed, direction);
-                    telemetry.addData("FrontLeftPwr", FrontLeft.getPower());
-                    telemetry.addData("In speeeeeeeed", FrontLeft.getPower());
+                if(Math.abs(motorPos) < Math.abs(accelTicks)){
+                    //Accel
+                    power = Math.abs(LeftTop.getCurrentPosition())/Math.abs(accelTicks);
+                    //Should get closer and closer to the max power the closer it gets to total accel ticks
+                    gyroDrive(Heading, Range.clip(power, .15, speed), direction);
+                    telemetry.addData("TopLeftPwr", LeftTop.getPower());
+                    telemetry.addData("In accel", LeftTop.getPower());
                     telemetry.update();
-                }else {
-                    gyroDrive(Heading, Range.clip(power, .15, 1), direction);
-                    telemetry.addData("FrontLeftPwr", FrontLeft.getPower());
-                    telemetry.addData("In Decel", FrontLeft.getPower());
+                }else if(Math.abs(motorPos) > Math.abs(decelTicks)){
+                    //Decel
+                    power = (Math.abs(target) - Math.abs(decelTicks)) / (Math.abs(target) - Math.abs(LeftTop.getCurrentPosition()));
+                    //Should get closer and closer to the max power the closer it gets to total accel ticks
+                    gyroDrive(Heading, Range.clip(power, .15, speed), direction);
+                    telemetry.addData("TopLeftPwr", LeftTop.getPower());
+                    telemetry.addData("In Decel", LeftTop.getPower());
+                    telemetry.update();
+                }else{
+                    //drive normal speed
+                    gyroDrive(Heading, speed, direction);
+                    telemetry.addData("TopLeftPwr", LeftTop.getPower());
+                    telemetry.addData("In normal speeeeeeeed", LeftTop.getPower());
                     telemetry.update();
                 }
 
@@ -300,7 +312,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
             stopDriveMotors();
         }
     }
-*/
+
+
+
     public void gyroTurn(double speed, double angle) {
         // keep looping while we are still active, and not on heading.
         //uses onHeading to actually turn the robot/figure out error
@@ -418,6 +432,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
         RightTop.setPower(0);
         RightBottom.setPower(0);
     }
+    public void pivot(double rotationSpeed, int direction){
+        LeftTop.setPower(rotationSpeed*direction);
+        LeftBottom.setPower(rotationSpeed*direction);
+        RightTop.setPower(rotationSpeed*-direction);
+        RightBottom.setPower(rotationSpeed*-direction);
+    }
+
    /* public void findWall(double speed, double distance, double Timeout){
         int badLoopTimer = 0;
         double startHeading = getHeading();
@@ -486,84 +507,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         HangingSlide.setPower(0);
     }
-    public void findSamplePosition(){
-        int goldPosition = 0;
-        if (opModeIsActive()) {
-            /** Activate Tensor Flow Object Detection. */
-            if (tfod != null) {
-                tfod.activate();
-            }
-            while (goldPosition == 0 && opModeIsActive()) {
-                if (tfod != null) {
-                    // getUpdatedRecognitions() will return null if no new information is available since
-                    // the last time that call was made.
-                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                    if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
-                        int goldMineralX = -1;
-                        for (Recognition recognition : updatedRecognitions) {
-                            if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                                goldMineralX = (int) recognition.getLeft();
-                            }
-                        }
-                        if (goldMineralX != -1){
-                            if(getHeading() > 5){
-                                goldPosition = 3;
-                                telemetry.addData("Gold is in Right Pos", goldPosition);
-                            }else if(getHeading() < -5){
-                                goldPosition = 2;
-                                telemetry.addData("Gold is in Left Pos", goldPosition);
-                            }else{
-                                goldPosition = 1;
-                                telemetry.addData("Gold is in Center Pos", goldPosition);
-                            }
-                        }
-                        telemetry.update();
-                    }
-                }
-                sleep(2500);
-            }
-           /* while (opModeIsActive()) {
-                if (tfod != null) {
-                    // getUpdatedRecognitions() will return null if no new information is available since
-                    // the last time that call was made.
-                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                    if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
-                        if (updatedRecognitions.size() == 3) {
-                            int goldMineralX = -1;
-                            int silverMineral1X = -1;
-                            int silverMineral2X = -1;
-                            for (Recognition recognition : updatedRecognitions) {
-                                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                                    goldMineralX = (int) recognition.getLeft();
-                                } else if (silverMineral1X == -1) {
-                                    silverMineral1X = (int) recognition.getLeft();
-                                } else {
-                                    silverMineral2X = (int) recognition.getLeft();
-                                }
-                            }
-                            if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                                if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                                    telemetry.addData("Gold Mineral Position", "Left");
-                                } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                    telemetry.addData("Gold Mineral Position", "Right");
-                                } else {
-                                    telemetry.addData("Gold Mineral Position", "Center");
-                                }
-                                telemetry.addData("Gold X pos", goldMineralX);
-                            }
-                        }
-                        telemetry.update();
-                    }
-                }
-            }*/
-        }
-
-        if (tfod != null) {
-            tfod.shutdown();
-        }
-    }
     public void unextendHangSlide(){
         //this is made so it can be in a loop by itself, or in another loop.
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -580,6 +523,97 @@ public class DeclarationsAutonomous extends LinearOpMode {
             return true;
         }
     }
+    public void craterSideSample(){
+        //should come immediately after unlatching
+        gyroTurn(turningSpeed, 0);
+        encoderDrive(.35, 6, 10, stayOnHeading, 2);
+        while(goldPosition == 0 && getHeading() < 25 &&opModeIsActive()){
+            pivot(.35, 1);
+            getGoldPosition();
+            unextendHangSlide();
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+        }
+        gyroTurn(turningSpeed, decideFirstSampleheading());
+        encoderDrive(.35, 12, forward, stayOnHeading, 5);
+
+    }
+    public void depotSideSample(){}
+
+    public int decideFirstSampleheading(){
+        int heading;
+        if(goldPosition == 1){
+            telemetry.addData("On your left", "Marvel reference");
+            heading = -15;
+        }else if (goldPosition == 2){
+            telemetry.addData("Center", "Like Shaq");
+            heading = 0;
+        }else if(goldPosition == 3){
+            telemetry.addData("Right", "Like I always am");
+            heading = 15;
+        }else{
+            telemetry.addData("Something is very wrong", "Decide first sample heading function");
+            //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
+            heading = 0;
+        }
+        telemetry.update();
+        return heading;
+    }
+
+    public void getGoldPosition(){
+        if (goldPosition == 0 && opModeIsActive()) {
+            if (tfod != null) {
+                tfod.activate();
+
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                if (updatedRecognitions != null) {
+                    telemetry.addData("# Object Detected", updatedRecognitions.size());
+                    if (updatedRecognitions.size() == 2) {
+                        int goldMineralX = -1;
+                        int silverMineral1X = -1;
+                        int silverMineral2X = -1;
+                        for (Recognition recognition : updatedRecognitions) {
+                            if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                goldMineralX = (int) recognition.getLeft();
+                            } else if (silverMineral1X == -1) {
+                                silverMineral1X = (int) recognition.getLeft();
+                            } else {
+                                silverMineral2X = (int) recognition.getLeft();
+                            }
+                        }
+                        if(goldMineralX == -1){
+                            telemetry.addData("Gold Mineral Position", "Left");
+                            goldPosition = 1;
+                        }else if(goldMineralX < silverMineral1X){
+                            telemetry.addData("Gold Mineral Position", "Center");
+                            goldPosition = 2;
+                        }else{
+                            telemetry.addData("Gold Mineral Position", "Right");
+                            goldPosition = 3;
+                        }
+                        telemetry.addData("Gold pos", goldPosition);
+                        telemetry.addData("Gold X pos", goldMineralX);
+                        telemetry.addData("Silver1 X pos", silverMineral1X);
+                        telemetry.addData("Silver2 X pos", silverMineral2X);
+                        telemetry.update();
+                    }
+                }
+            }
+        }
+    }
+    /*
+    Once we're unlatched, turn to the right until we see two minerals
+    then, based off of those two minerals, turn to a position
+    go forward x inches
+    go backward x inches
+    turn left
+    */
+
     public void endAuto(){
         //telemetry for autonomous testing to see any factors that may have went wrong
         telemetry.addData("No Glyphs", "Cuz that was last year");

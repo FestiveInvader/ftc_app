@@ -140,7 +140,7 @@ public class Teleop extends OpMode {
             armPower = Range.clip(gamepad2.left_stick_y, -1, .25);
         }else if (potRotation >= 175 && potRotation <= 195){
             armPower = Range.clip(gamepad2.left_stick_y, -.35, 1);
-        }else if (potRotation >= 195 && potRotation <=200){
+        }else if (potRotation >= 195 && potRotation <=20d){
             armPower = Range.clip(gamepad2.left_stick_y, 0, 1);
         }else if (potRotation >= 200){
             armPower = Range.clip(gamepad2.left_stick_y+.2, 0, 1);

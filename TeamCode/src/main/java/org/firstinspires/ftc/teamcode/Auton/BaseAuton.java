@@ -5,11 +5,15 @@ public class BaseAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unlatch();
+        /*unlatch();
         while(hangSlideIsExtended()&& opModeIsActive()){
             unextendHangSlide();
         }
 
-        endAuto();
+        endAuto();*/
+        /*while(opModeIsActive()) {
+            findGoldPosition();
+        }*/
+
     }
 }
