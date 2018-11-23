@@ -525,6 +525,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     public void craterSideSample(){
         //should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
         encoderDrive(.35, 6, 10, stayOnHeading, 2);
         while(goldPosition == 0 && getHeading() < 25 &&opModeIsActive()){
@@ -541,7 +543,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         encoderDrive(.35, 12, forward, stayOnHeading, 5);
 
     }
-    public void depotSideSample(){}
+    public void depotSideSample(){
+
+    }
 
     public int decideFirstSampleheading(){
         int heading;
