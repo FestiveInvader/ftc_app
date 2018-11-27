@@ -41,6 +41,9 @@ public class Teleop extends OpMode {
     public CRServo IntakeRight;
     public Servo HangCamLeft;
     public Servo HangCamRight;
+    public Servo TeamMarker;
+    public Servo IntakeFlapLeft;
+    public Servo IntakeFlapRight;
     //public CRServo IntakeLeft;                  // Rev SRS
     //public Servo PTOShifterLeft;                      // Rev SRS
     //public Servo PTOShifterRight;
@@ -60,11 +63,18 @@ public class Teleop extends OpMode {
     double intakePower = 0;
     double armRotatePower = 0;
 
+    double teamMarkerDeploy = -.1;
+    double teamMarkerResting = .3;
+
     boolean hangRatchetEngaged = true;
     double hangCamLeftEngagedPos = 1;
     double hangCamLeftUnengagedPos = 0;
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
+    double intakeFlapLeftOpen = 0;
+    double intakeFlapLeftClosed = 1;
+    double intakeFlapRightOpen = 1;
+    double intakeFlapRightClosed = 0;
 
     double hangSlideDownPos = 0;
 
@@ -86,8 +96,13 @@ public class Teleop extends OpMode {
 
         IntakeLeft = hardwareMap.crservo.get("IntakeLeft");
         IntakeRight = hardwareMap.crservo.get("IntakeRight");
+        IntakeFlapLeft = hardwareMap.servo.get("IntakeFlapLeft");
+        IntakeFlapRight = hardwareMap.servo.get("IntakeFlapRight");
+
         HangCamLeft = hardwareMap.servo.get("HangCamLeft");
         HangCamRight = hardwareMap.servo.get("HangCamRight");
+
+        TeamMarker = hardwareMap.servo.get("TeamMarker");
 
         HangSlideLimit = hardwareMap.get(DigitalChannel.class, "HangSlideLimit");
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
@@ -104,7 +119,6 @@ public class Teleop extends OpMode {
         RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -149,22 +163,8 @@ public class Teleop extends OpMode {
         }
 
         if(gamepad2.left_trigger > .1){
-            armPower = armPower * gamepad2.left_trigger;
+            armPower = armPower * .35;
         }
-
-        if(HangSlideLimit.getState() == false){
-            //hanging slide is down
-            hangingMotorPower = Range.clip(gamepad2.right_stick_y, -1, 0);
-        }else {
-            //if(HangingSlide.getCurrentPosition() < ticksToExtendHang)
-            hangingMotorPower = gamepad2.right_stick_y;
-        }
-        if(gamepad2.a){
-            hangRatchetEngaged = true;
-        }else if (gamepad2.b){
-            hangRatchetEngaged = false;
-        }
-
 
         if(gamepad1.right_trigger > .1){
             armSlidePower = gamepad1.right_trigger;
@@ -174,11 +174,42 @@ public class Teleop extends OpMode {
             armSlidePower = 0;
         }
 
-        if(gamepad1.right_bumper) {
+        if(gamepad1.right_bumper || gamepad2.right_bumper) {
             intakePower = .7;
         }else{
             intakePower = 0;
         }
+
+        if(gamepad2.dpad_right){
+            IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
+            IntakeFlapRight.setPosition(intakeFlapRightOpen);
+        }else if(gamepad2.dpad_left) {
+            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+            IntakeFlapRight.setPosition(intakeFlapRightClosed);
+        }else if(gamepad2.dpad_down){
+            IntakeFlapLeft.setPosition(.4);
+            IntakeFlapRight.setPosition(.6);
+        }
+
+        if(gamepad2.left_bumper){
+            if (HangSlideLimit.getState() == false) {
+                //hanging slide is down
+                hangingMotorPower = Range.clip(gamepad2.right_stick_y, -1, 0);
+            } else {
+                //if(HangingSlide.getCurrentPosition() < ticksToExtendHang)
+                hangingMotorPower = gamepad2.right_stick_y;
+            }
+        }else {
+            hangingMotorPower = 0;
+            armSlidePower = -gamepad2.right_stick_y;
+        }
+
+        if(gamepad2.a){
+            hangRatchetEngaged = true;
+        }else if (gamepad2.b){
+            hangRatchetEngaged = false;
+        }
+
 
         leftPower = gamepad1.left_stick_y;
         rightPower = gamepad1.right_stick_y;
@@ -188,6 +219,8 @@ public class Teleop extends OpMode {
     }
 
     public void setPowers(){
+        TeamMarker.setPosition(teamMarkerResting)
+        ;
         LeftTop.setPower(leftPower);
         LeftBottom.setPower(leftPower);
         RightTop.setPower(rightPower);

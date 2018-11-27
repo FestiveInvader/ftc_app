@@ -49,6 +49,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public CRServo IntakeRight;
     public Servo HangCamLeft;
     public Servo HangCamRight;
+    public Servo TeamMarker;
     //public CRServo IntakeLeft;                  // Rev SRS
     //public Servo PTOShifterLeft;                      // Rev SRS
     //public Servo PTOShifterRight;
@@ -81,6 +82,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamLeftUnengagedPos = 0;
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
+
+    double teamMarkerDeploy = -.1;
+    double teamMarkerResting = .3;
 
     int goldPosition = 0;
 
@@ -122,6 +126,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         IntakeRight = hardwareMap.crservo.get("IntakeRight");
         HangCamLeft = hardwareMap.servo.get("HangCamLeft");
         HangCamRight = hardwareMap.servo.get("HangCamRight");
+        TeamMarker = hardwareMap.servo.get("TeamMarker");
 
         HangSlideLimit = hardwareMap.get(DigitalChannel.class, "HangSlideLimit");
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
