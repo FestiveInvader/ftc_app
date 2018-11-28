@@ -76,6 +76,8 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
+    double armScoringRotation = 90;
+
     double hangSlideDownPos = 0;
 
 
@@ -146,20 +148,26 @@ public class Teleop extends OpMode {
     public void loop() {
         potRotation = ArmPot.getVoltage()/potMagicNumber;
 
-        if(potRotation <= 45) {
-            armPower = Range.clip(gamepad2.left_stick_y-.2, -1, 0);
-        }else if(potRotation < 50) {
-            armPower = Range.clip(gamepad2.left_stick_y, -1, 0);
-        }else if(potRotation >= 50 && potRotation <= 65){
-            armPower = Range.clip(gamepad2.left_stick_y, -1, .25);
-        }else if (potRotation >= 175 && potRotation <= 195){
-            armPower = Range.clip(gamepad2.left_stick_y, -.35, 1);
-        }else if (potRotation >= 195 && potRotation <=20d){
-            armPower = Range.clip(gamepad2.left_stick_y, 0, 1);
-        }else if (potRotation >= 200){
-            armPower = Range.clip(gamepad2.left_stick_y+.2, 0, 1);
-        }else{
-            armPower = gamepad2.left_stick_y;
+        if(gamepad2.right_bumper){
+            double error = (Math.abs(potRotation)-Math.abs(armScoringRotation));
+            double ArmRotPVal = .015;//Change this for faster or slower rotation
+            armPower = Range.clip(error*ArmRotPVal, -.1, .1);
+        }else {
+            if (potRotation <= 45) {
+                armPower = Range.clip(-gamepad2.left_stick_y - .2, -1, 0);
+            } else if (potRotation < 50) {
+                armPower = Range.clip(-gamepad2.left_stick_y, -1, 0);
+            } else if (potRotation >= 50 && potRotation <= 65) {
+                armPower = Range.clip(-gamepad2.left_stick_y, -1, .25);
+            } else if (potRotation >= 175 && potRotation <= 195) {
+                armPower = Range.clip(-gamepad2.left_stick_y, -.35, 1);
+            } else if (potRotation >= 195 && potRotation <= 20d) {
+                armPower = Range.clip(-gamepad2.left_stick_y, 0, 1);
+            } else if (potRotation >= 200) {
+                armPower = Range.clip(-gamepad2.left_stick_y + .2, 0, 1);
+            } else {
+                armPower = -gamepad2.left_stick_y;
+            }
         }
 
         if(gamepad2.left_trigger > .1){
@@ -174,19 +182,24 @@ public class Teleop extends OpMode {
             armSlidePower = 0;
         }
 
-        if(gamepad1.right_bumper || gamepad2.right_bumper) {
+        if(gamepad2.right_trigger > .1) {
+            intakePower = Range.clip(gamepad2.right_trigger/3,-.7,.7);
+        }else if(gamepad1.right_bumper) {
             intakePower = .7;
+        }else if(gamepad1.start || gamepad2.start) {
+            intakePower = -.7;
         }else{
             intakePower = 0;
         }
 
-        if(gamepad2.dpad_right){
+
+        if(gamepad2.dpad_down){
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightOpen);
-        }else if(gamepad2.dpad_left) {
+        }else if(gamepad2.dpad_up) {
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
-        }else if(gamepad2.dpad_down){
+        }else if(gamepad2.dpad_left){
             IntakeFlapLeft.setPosition(.4);
             IntakeFlapRight.setPosition(.6);
         }
