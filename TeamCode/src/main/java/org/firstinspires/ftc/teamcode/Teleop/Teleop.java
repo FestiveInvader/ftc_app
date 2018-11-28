@@ -76,7 +76,10 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 90;
+    double armScoringRotation = 80;
+    double armPVal = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
+    double armRotError = 0;
+
 
     double hangSlideDownPos = 0;
 
@@ -115,6 +118,7 @@ public class Teleop extends OpMode {
         RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
         RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
         HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
+
         LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -122,6 +126,7 @@ public class Teleop extends OpMode {
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -149,9 +154,8 @@ public class Teleop extends OpMode {
         potRotation = ArmPot.getVoltage()/potMagicNumber;
 
         if(gamepad2.right_bumper){
-            double error = (Math.abs(potRotation)-Math.abs(armScoringRotation));
-            double ArmRotPVal = .015;//Change this for faster or slower rotation
-            armPower = Range.clip(error*ArmRotPVal, -.1, .1);
+            armRotError = (Math.abs(potRotation)-Math.abs(armScoringRotation));
+            armPower = Range.clip(armRotError*armPVal, -1, 1);
         }else {
             if (potRotation <= 45) {
                 armPower = Range.clip(-gamepad2.left_stick_y - .2, -1, 0);
@@ -193,15 +197,22 @@ public class Teleop extends OpMode {
         }
 
 
+        if(potRotation > 135){
+            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+            IntakeFlapRight.setPosition(intakeFlapRightClosed);
+        }
         if(gamepad2.dpad_down){
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightOpen);
+            intakePower = .3;
+
         }else if(gamepad2.dpad_up) {
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }else if(gamepad2.dpad_left){
             IntakeFlapLeft.setPosition(.4);
             IntakeFlapRight.setPosition(.6);
+            intakePower = .7;
         }
 
         if(gamepad2.left_bumper){
@@ -266,6 +277,7 @@ public class Teleop extends OpMode {
         telemetry.addData("left power,", leftPower);
         telemetry.addData("right power,", rightPower);
         telemetry.addData("hanging power,", hangingMotorPower);
+        telemetry.addData("arm power,", armPower);
         telemetry.addData("Magnetic switch", HangSlideLimit.getState());
         telemetry.update();
     }

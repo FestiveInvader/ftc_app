@@ -5,15 +5,8 @@ public class BaseAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        /*unlatch();
-        while(hangSlideIsExtended()&& opModeIsActive()){
-            unextendHangSlide();
-        }
-
-        endAuto();*/
-        /*while(opModeIsActive()) {
-            findGoldPosition();
-        }*/
-
+        unlatch();
+        craterSideSample();
+        endAuto();
     }
 }

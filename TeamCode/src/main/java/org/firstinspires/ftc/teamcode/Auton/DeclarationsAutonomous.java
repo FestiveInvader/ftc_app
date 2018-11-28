@@ -83,6 +83,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
+    double armScoringRotation = 82.5;
+    double armPVal = .025;
+    double armPower;
+
     double teamMarkerDeploy = -.1;
     double teamMarkerResting = .3;
 
@@ -133,10 +137,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
         ArmPot = hardwareMap.analogInput.get("ArmPot");
 
-        LeftTop.setDirection(DcMotorSimple.Direction.REVERSE);
-        LeftBottom.setDirection(DcMotorSimple.Direction.FORWARD);
-        RightTop.setDirection(DcMotorSimple.Direction.FORWARD);
-        RightBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
+        LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
         HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
         LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -340,8 +344,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double PosOrNeg = 1;
         double SpeedError;
         double error = getError(angle);
-        double minTurnSpeed = .15;
-        double maxTurnSpeed = .5;
+        double minTurnSpeed = .25;
+        double maxTurnSpeed = .75;
         // determine turn power based on +/- error
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
@@ -438,79 +442,42 @@ public class DeclarationsAutonomous extends LinearOpMode {
         RightBottom.setPower(0);
     }
     public void pivot(double rotationSpeed, int direction){
-        LeftTop.setPower(rotationSpeed*direction);
-        LeftBottom.setPower(rotationSpeed*direction);
-        RightTop.setPower(rotationSpeed*-direction);
-        RightBottom.setPower(rotationSpeed*-direction);
+        LeftTop.setPower(rotationSpeed*-direction);
+        LeftBottom.setPower(rotationSpeed*-direction);
+        RightTop.setPower(rotationSpeed*direction);
+        RightBottom.setPower(rotationSpeed*direction);
     }
 
-   /* public void findWall(double speed, double distance, double Timeout){
-        int badLoopTimer = 0;
-        double startHeading = getHeading();
-        boolean foundWall = false;
-        double timeout = runtime.seconds() + Timeout;
-        int ThisLoopDistance;
-        while (opModeIsActive() && !foundWall && (runtime.seconds() < timeout)) {
-            //we can tell if the sensor value is bad, but in this case we don't do anything with it
-            ThisLoopDistance = BackDistance.getDistance();
-            if(ThisLoopDistance > 200 || ThisLoopDistance < 21){
-                //sensor val is bad, skip this loop
-                moveBy(speed, 0, 0);
-                badLoopTimer++;
-            }else if(ThisLoopDistance > distance){
-                moveBy(speed, 0, 0);
-            }else{
-                stopDriveMotors();
-                foundWall = true;
-            }
-            telemetry.addData("Distance", BackDistance.getDistance());
-            telemetry.update();
-            smartIntake();
-        }
-    }
-   */
-    /*public void goToDistance(double targetSpeed, double distance,  I2CXLv2 distanceSensor, double timeout, int tolerance){
-        double startTime = runtime.seconds();
-        double maxTime = startTime + timeout;
-        double startHeading = getHeading();
-        boolean foundTarget = false;
-        int ThisLoopDistance;
-        while (opModeIsActive() && !foundTarget && maxTime - runtime.seconds() > .1) {
-            ThisLoopDistance = BackDistance.getDistance();
-            double error = distance - ThisLoopDistance;
-            int Direction = (int) Range.clip(error, -1, 1);
 
-            if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .135, targetSpeed), Direction);
-                //sensor val is bad, stop bot so it doesn't go too far
-            }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .135, targetSpeed), Direction);
-            }else{
-                stopDriveMotors();
-                foundTarget = true;
-            }
-            telemetry.addData("Distance", ThisLoopDistance);
-            telemetry.addData("error", error);
-            telemetry.addData("speed", FrontLeft.getPower());
-            telemetry.update();
-        }
-        stopDriveMotors();
-    }
-    */
     //End General movement functions
 
     //Start Rover Ruckus specific movement and logic functions
     public void unlatch(){
+
         HangingSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         int inchesToUnlatch = 26;
-        HangingSlide.setTargetPosition((int) ticksPerHangingInch * -20);
+        HangingSlide.setTargetPosition((int) ticksPerHangingInch * -inchesToUnlatch);
         HangCamLeft.setPosition(hangCamLeftUnengagedPos);
         HangCamRight.setPosition(hangCamRightUnengagedPos);
-        sleep(1000);
+        double timer = runtime.seconds() + 1;
+        while(timer > runtime.seconds() && opModeIsActive()){
+            keepMineralArmUp();
+        }
         while(HangingSlide.isBusy()){
             HangingSlide.setPower(1);
+            keepMineralArmUp();
         }
         HangingSlide.setPower(0);
+        ArmTop.setPower(0);
+        ArmBottom.setPower(0);
+    }
+    public void keepMineralArmUp(){
+        double potRotation = ArmPot.getVoltage()/potMagicNumber;
+        double armRotError = (Math.abs(potRotation)-Math.abs(armScoringRotation));
+
+        armPower = Range.clip(armRotError*armPVal, -1, 1);
+        ArmTop.setPower(armPower);
+        ArmBottom.setPower(armPower);
     }
     public void unextendHangSlide(){
         //this is made so it can be in a loop by itself, or in another loop.
@@ -533,8 +500,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
-        encoderDrive(.35, 6, 10, stayOnHeading, 2);
-        while(goldPosition == 0 && getHeading() < 25 &&opModeIsActive()){
+        encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        while(goldPosition == 0 && getHeading() < 45 &&opModeIsActive()){
             pivot(.35, 1);
             getGoldPosition();
             unextendHangSlide();
@@ -545,7 +512,11 @@ public class DeclarationsAutonomous extends LinearOpMode {
             goldPosition = 1;
         }
         gyroTurn(turningSpeed, decideFirstSampleheading());
-        encoderDrive(.35, 12, forward, stayOnHeading, 5);
+        if(goldPosition == 2){
+            encoderDrive(.35, 12, forward, stayOnHeading, 5);
+        }else{
+            encoderDrive(.35, 18, forward, stayOnHeading, 5);
+        }
 
     }
     public void depotSideSample(){
@@ -556,13 +527,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -15;
+            heading = -30;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 0;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 15;
+            heading = 30;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -631,5 +602,57 @@ public class DeclarationsAutonomous extends LinearOpMode {
         // End Regular 85 point functions
 
         // Start Multi-glyph functions
+ /* public void findWall(double speed, double distance, double Timeout){
+        int badLoopTimer = 0;
+        double startHeading = getHeading();
+        boolean foundWall = false;
+        double timeout = runtime.seconds() + Timeout;
+        int ThisLoopDistance;
+        while (opModeIsActive() && !foundWall && (runtime.seconds() < timeout)) {
+            //we can tell if the sensor value is bad, but in this case we don't do anything with it
+            ThisLoopDistance = BackDistance.getDistance();
+            if(ThisLoopDistance > 200 || ThisLoopDistance < 21){
+                //sensor val is bad, skip this loop
+                moveBy(speed, 0, 0);
+                badLoopTimer++;
+            }else if(ThisLoopDistance > distance){
+                moveBy(speed, 0, 0);
+            }else{
+                stopDriveMotors();
+                foundWall = true;
+            }
+            telemetry.addData("Distance", BackDistance.getDistance());
+            telemetry.update();
+            smartIntake();
+        }
+    }
+   */
+    /*public void goToDistance(double targetSpeed, double distance,  I2CXLv2 distanceSensor, double timeout, int tolerance){
+        double startTime = runtime.seconds();
+        double maxTime = startTime + timeout;
+        double startHeading = getHeading();
+        boolean foundTarget = false;
+        int ThisLoopDistance;
+        while (opModeIsActive() && !foundTarget && maxTime - runtime.seconds() > .1) {
+            ThisLoopDistance = BackDistance.getDistance();
+            double error = distance - ThisLoopDistance;
+            int Direction = (int) Range.clip(error, -1, 1);
 
+            if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
+                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .135, targetSpeed), Direction);
+                //sensor val is bad, stop bot so it doesn't go too far
+            }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
+                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .135, targetSpeed), Direction);
+            }else{
+                stopDriveMotors();
+                foundTarget = true;
+            }
+            telemetry.addData("Distance", ThisLoopDistance);
+            telemetry.addData("error", error);
+            telemetry.addData("speed", FrontLeft.getPower());
+            telemetry.update();
+        }
+        stopDriveMotors();
+    }
+    */
 }
