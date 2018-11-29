@@ -9,6 +9,7 @@ public class DepotBaseAuton extends DeclarationsAutonomous {
         //unlatch();
         depotSideSample();
         depotSideDeployMarker();
+        depotDriveToFarCrater();
         endAuto();
     }
 }

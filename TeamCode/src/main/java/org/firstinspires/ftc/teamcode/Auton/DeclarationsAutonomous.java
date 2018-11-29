@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
@@ -344,7 +343,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double PosOrNeg = 1;
         double SpeedError;
         double error = getError(angle);
-        double minTurnSpeed = .4;
+        double minTurnSpeed = .35;
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
         if (Math.abs(error) <= HEADING_THRESHOLD) {
@@ -503,7 +502,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         encoderDrive(.35, 2, 1, stayOnHeading, 2);
         while(goldPosition == 0 && getHeading() < 45 &&opModeIsActive()){
             pivot(.425, 1);
-            getGoldPosition();
+            getGoldPositionTwoMineral();
             unextendHangSlide();
         }
         if(goldPosition == 0){
@@ -526,9 +525,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
         encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        gyroTurn(turningSpeed, 20);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
-            gyroTurn(turningSpeed, 20);
-            getGoldPosition();
+            getGoldPositionTwoMineral();
             unextendHangSlide();
         }
         if(goldPosition == 0){
@@ -541,7 +540,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         if(goldPosition == 2){
             encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
         }else{
-            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 18, forward, stayOnHeading, 2.5);
         }
     }
     public void depotSideDeployMarker(){
@@ -556,14 +555,20 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         deployTeamMarker();
         sleep(1000);
+        TeamMarker.setPosition(teamMarkerResting);
     }
     public void deployTeamMarker(){
         TeamMarker.setPosition(teamMarkerDeploy);
     }
-    public void depotDriveToCrater(){
+    public void depotDriveToFarCrater(){
         //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
         //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
         // we get a little bit of extra time for cycles.
+        gyroTurn(turningSpeed, -45);
+        encoderDrive(.35, 18, forward, stayOnHeading, 2);
+        encoderDrive(.35, 2.5, reverse, stayOnHeading, 1.5);
+        gyroTurn(turningSpeed, 50);
+        encoderDrive(.75, 72, reverse, stayOnHeading, 5);
     }
     public void depotSideDoubleSample(){
 
@@ -590,7 +595,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         return heading;
     }
 
-    public void getGoldPosition(){
+    public void getGoldPositionTwoMineral(){
         if (goldPosition == 0 && opModeIsActive()) {
             if (tfod != null) {
                 tfod.activate();
