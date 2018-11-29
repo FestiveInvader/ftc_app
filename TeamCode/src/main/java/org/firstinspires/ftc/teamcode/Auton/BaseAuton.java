@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.Auton;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-@Autonomous(name="Unlatch, probably", group="Auton")
+@Autonomous(name="Crater side | Basic ", group="Crater Side")
 public class BaseAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {

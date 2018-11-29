@@ -344,8 +344,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double PosOrNeg = 1;
         double SpeedError;
         double error = getError(angle);
-        double minTurnSpeed = .25;
-        double maxTurnSpeed = .75;
+        double minTurnSpeed = .4;
+        double maxTurnSpeed = 1;
         // determine turn power based on +/- error
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
@@ -502,7 +502,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, 0);
         encoderDrive(.35, 2, 1, stayOnHeading, 2);
         while(goldPosition == 0 && getHeading() < 45 &&opModeIsActive()){
-            pivot(.35, 1);
+            pivot(.425, 1);
             getGoldPosition();
             unextendHangSlide();
         }
@@ -515,25 +515,72 @@ public class DeclarationsAutonomous extends LinearOpMode {
         if(goldPosition == 2){
             encoderDrive(.35, 12, forward, stayOnHeading, 5);
         }else{
-            encoderDrive(.35, 18, forward, stayOnHeading, 5);
+            encoderDrive(.35, 24, forward, stayOnHeading, 5);
         }
 
     }
     public void depotSideSample(){
+        ElapsedTime elapsedTime = new ElapsedTime();
+//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+        gyroTurn(turningSpeed, 0);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            gyroTurn(turningSpeed, 20);
+            getGoldPosition();
+            unextendHangSlide();
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+            //Position 1 is the leftmost mineral
+        }
+        gyroTurn(turningSpeed, decideFirstSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
+        }else{
+            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+        }
+    }
+    public void depotSideDeployMarker(){
+        if(goldPosition == 1){
+            gyroTurn(turningSpeed, 40);
+            encoderDrive(.5, 24, forward, stayOnHeading, 2);
+        }else if(goldPosition == 2){
+            //should have already gone all the way straight
+        }else if(goldPosition == 3){
+            gyroTurn(turningSpeed, -40);
+            encoderDrive(.5, 24, forward, stayOnHeading, 2);
+        }
+        deployTeamMarker();
+        sleep(1000);
+    }
+    public void deployTeamMarker(){
+        TeamMarker.setPosition(teamMarkerDeploy);
+    }
+    public void depotDriveToCrater(){
+        //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
+        //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
+        // we get a little bit of extra time for cycles.
+    }
+    public void depotSideDoubleSample(){
 
     }
+    public void driveFromDepot(){}
 
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -30;
+            heading = -40   ;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 0;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 30;
+            heading = 40;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
