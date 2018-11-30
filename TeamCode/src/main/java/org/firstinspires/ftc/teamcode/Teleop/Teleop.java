@@ -197,15 +197,11 @@ public class Teleop extends OpMode {
         }
 
 
-        if(potRotation > 135){
-            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
-            IntakeFlapRight.setPosition(intakeFlapRightClosed);
-        }
+
         if(gamepad2.dpad_down){
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightOpen);
             intakePower = .3;
-
         }else if(gamepad2.dpad_up) {
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
@@ -213,6 +209,9 @@ public class Teleop extends OpMode {
             IntakeFlapLeft.setPosition(.4);
             IntakeFlapRight.setPosition(.6);
             intakePower = .7;
+        }else{
+            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+            IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }
 
         if(gamepad2.left_bumper){

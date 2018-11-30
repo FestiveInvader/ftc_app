@@ -55,6 +55,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public DigitalChannel HangSlideLimit;
     public AnalogInput ArmPot;
     public BNO055IMU IMU;
+    public I2CXLv2 FrontDistance;
 
     // Variables used  in functions
     double CountsPerRev = 537.6;    // Andymark NeveRest 20 encoder counts per revolution
@@ -72,7 +73,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
     double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
-    double turningSpeed = .175;
+    double turningSpeed = .4;
 
     double potMagicNumber = .01222;
 
@@ -135,6 +136,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
 
         ArmPot = hardwareMap.analogInput.get("ArmPot");
+        FrontDistance = hardwareMap.get(I2CXLv2.class, "FrontDistance");
 
         LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
         LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -320,7 +322,32 @@ public class DeclarationsAutonomous extends LinearOpMode {
             stopDriveMotors();
         }
     }
-
+    public void goToDistance(double targetSpeed, double distance,  I2CXLv2 distanceSensor, double timeout, int tolerance){
+        double startTime = runtime.seconds();
+        double maxTime = startTime + timeout;
+        double startHeading = getHeading();
+        boolean foundTarget = false;
+        int ThisLoopDistance;
+        while (opModeIsActive() && !foundTarget && maxTime - runtime.seconds() > .1) {
+            ThisLoopDistance = FrontDistance.getDistance();
+            double error = distance - ThisLoopDistance;
+            int Direction = (int) -Range.clip(error, -1, 1);
+            if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
+                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .25, targetSpeed), Direction);
+                //sensor val is bad, stop bot so it doesn't go too far
+            }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
+                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .25, targetSpeed), Direction);
+            }else{
+                stopDriveMotors();
+                foundTarget = true;
+            }
+            telemetry.addData("Distance", ThisLoopDistance);
+            telemetry.addData("error", error);
+            telemetry.addData("speed", LeftTop.getPower());
+            telemetry.update();
+        }
+        stopDriveMotors();
+    }
 
 
     public void gyroTurn(double speed, double angle) {
@@ -343,7 +370,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double PosOrNeg = 1;
         double SpeedError;
         double error = getError(angle);
-        double minTurnSpeed = .35;
+        double minTurnSpeed = .5;//definetly play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
         if (Math.abs(error) <= HEADING_THRESHOLD) {
@@ -359,7 +386,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
             // as more accurate turning when using the GyroSensor
             PosOrNeg = Range.clip((int)error, -1, 1);
             steer = getSteer(error, PCoeff);
-            leftSpeed  = Range.clip(speed + Math.abs(error/175) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            //the error/thispower was 175, changed to 100 for more responsiveness
+            leftSpeed  = Range.clip(speed + Math.abs(error/100) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
 
             rightSpeed = -leftSpeed;
         }
@@ -525,9 +553,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
         encoderDrive(.35, 2, 1, stayOnHeading, 2);
-        gyroTurn(turningSpeed, 20);
+        gyroTurn(turningSpeed, 15);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
-            getGoldPositionTwoMineral();
+            getGoldPositionOneMineral();
             unextendHangSlide();
         }
         if(goldPosition == 0){
@@ -540,9 +568,34 @@ public class DeclarationsAutonomous extends LinearOpMode {
         if(goldPosition == 2){
             encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
         }else{
-            encoderDrive(.5, 18, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 22, forward, stayOnHeading, 2.5);
         }
     }
+    public void neutralSideSample(){
+        double heading = getHeading();
+        ElapsedTime elapsedTime = new ElapsedTime();
+//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+
+        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            getGoldPositionOneMineral();
+            unextendHangSlide();
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+            //Position 1 is the leftmost mineral
+        }
+        gyroTurn(turningSpeed, decideSecondSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 12, forward, stayOnHeading, 5);
+        }else{
+            encoderDrive(.5, 18, forward, stayOnHeading, 5);
+        }
+    }
+
     public void depotSideDeployMarker(){
         if(goldPosition == 1){
             gyroTurn(turningSpeed, 40);
@@ -553,25 +606,44 @@ public class DeclarationsAutonomous extends LinearOpMode {
             gyroTurn(turningSpeed, -40);
             encoderDrive(.5, 24, forward, stayOnHeading, 2);
         }
-        deployTeamMarker();
-        sleep(1000);
-        TeamMarker.setPosition(teamMarkerResting);
     }
     public void deployTeamMarker(){
         TeamMarker.setPosition(teamMarkerDeploy);
     }
-    public void depotDriveToFarCrater(){
+    public void depotTurnToFarCrater(){
         //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
         //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
         // we get a little bit of extra time for cycles.
         gyroTurn(turningSpeed, -45);
         encoderDrive(.35, 18, forward, stayOnHeading, 2);
         encoderDrive(.35, 2.5, reverse, stayOnHeading, 1.5);
+        TeamMarker.setPosition(teamMarkerResting);
         gyroTurn(turningSpeed, 50);
-        encoderDrive(.75, 72, reverse, stayOnHeading, 5);
+    }
+    public void depotTurnToCloseCrater(){
+        //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
+        //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
+        // we get a little bit of extra time for cycles.
+        gyroTurn(turningSpeed, 45);
+        encoderDrive(.35, 18, forward, stayOnHeading, 2);
+        encoderDrive(.35, 2, reverse, stayOnHeading, 1.5);
+        TeamMarker.setPosition(teamMarkerResting);
+        gyroTurn(turningSpeed, -45);
     }
     public void depotSideDoubleSample(){
-
+        goToDistance(.425, 90, FrontDistance,5,3);
+        gyroTurn(turningSpeed, -30);
+        encoderDrive(.75, 18, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, 20);
+        encoderDrive(.75, 24, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, 90);
+        encoderDrive(.2, 4, reverse, stayOnHeading, 1.25);
+        gyroTurn(turningSpeed, decideSecondSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 12, forward, stayOnHeading, 2.5);
+        }else{
+            encoderDrive(.5, 18, forward, stayOnHeading, 2.5);
+        }
     }
     public void driveFromDepot(){}
 
@@ -586,6 +658,25 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
             heading = 40;
+        }else{
+            telemetry.addData("Something is very wrong", "Decide first sample heading function");
+            //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
+            heading = 0;
+        }
+        telemetry.update();
+        return heading;
+    }
+    public double decideSecondSampleheading(){
+        double heading = getHeading();
+        if(goldPosition == 1){
+            telemetry.addData("On your left", "Marvel reference");
+            heading = 40   ;
+        }else if (goldPosition == 2){
+            telemetry.addData("Center", "Like Shaq");
+            heading = 90;
+        }else if(goldPosition == 3){
+            telemetry.addData("Right", "Like I always am");
+            heading = 140;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -638,6 +729,65 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }
     }
+    public void getGoldPositionOneMineral(){
+        if (goldPosition == 0 && opModeIsActive()) {
+            if (tfod != null) {
+                tfod.activate();
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                if (updatedRecognitions != null) {
+
+                    telemetry.addData("# Object Detected", updatedRecognitions.size());
+                    int goldMineralX = -1;
+                    int silverMineral1X = -1;
+                    int silverMineral2X = -1;
+                    for (Recognition recognition : updatedRecognitions) {
+                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                            goldMineralX = (int) recognition.getLeft();
+                        } else {
+                            //then it's only silver seen, or nothing at all
+                        }
+                    }
+                    if(updatedRecognitions.size() > 0) {
+                        if (goldMineralX != -1) {
+                            if (goldMineralX > 600) {
+                                telemetry.addData("Gold Mineral Position", "Right ");
+                                goldPosition = 3;
+                            } else {
+                                telemetry.addData("Gold Mineral Position", "Center");
+                                goldPosition = 2;
+                            }
+
+                        }
+                    }else if(updatedRecognitions.size() == 2){
+                        if (goldMineralX != -1) {
+                            if (goldMineralX > 600) {
+                                telemetry.addData("Gold Mineral Position", "Right ");
+                                goldPosition = 3;
+                            } else {
+                                telemetry.addData("Gold Mineral Position", "Center");
+                                goldPosition = 2;
+                            }
+
+                        }else{
+                            telemetry.addData("Gold Mineral Position", "Left");
+                            goldPosition = 1;
+                        }
+                    }
+                    telemetry.addData("Gold pos", goldPosition);
+                    telemetry.addData("Gold X pos", goldMineralX);
+                    telemetry.addData("Silver1 X pos", silverMineral1X);
+                    telemetry.addData("Silver2 X pos", silverMineral2X);
+                    telemetry.update();
+                    telemetry.update();
+                        //if one is sensed and it's gold, which side is it on
+                        //otherwise, if it's two and neither is gold, left
+                }
+            }
+        }
+    }
+
     /*
     Once we're unlatched, turn to the right until we see two minerals
     then, based off of those two minerals, turn to a position
@@ -679,32 +829,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
     }
    */
-    /*public void goToDistance(double targetSpeed, double distance,  I2CXLv2 distanceSensor, double timeout, int tolerance){
-        double startTime = runtime.seconds();
-        double maxTime = startTime + timeout;
-        double startHeading = getHeading();
-        boolean foundTarget = false;
-        int ThisLoopDistance;
-        while (opModeIsActive() && !foundTarget && maxTime - runtime.seconds() > .1) {
-            ThisLoopDistance = BackDistance.getDistance();
-            double error = distance - ThisLoopDistance;
-            int Direction = (int) Range.clip(error, -1, 1);
 
-            if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .135, targetSpeed), Direction);
-                //sensor val is bad, stop bot so it doesn't go too far
-            }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .135, targetSpeed), Direction);
-            }else{
-                stopDriveMotors();
-                foundTarget = true;
-            }
-            telemetry.addData("Distance", ThisLoopDistance);
-            telemetry.addData("error", error);
-            telemetry.addData("speed", FrontLeft.getPower());
-            telemetry.update();
-        }
-        stopDriveMotors();
-    }
-    */
+
 }
