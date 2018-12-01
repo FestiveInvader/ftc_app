@@ -6,7 +6,7 @@ public class DepotDoubleAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        //unlatch();
+        unlatch();
         depotSideSample();
         depotSideDeployMarker();
         depotTurnToCloseCrater();

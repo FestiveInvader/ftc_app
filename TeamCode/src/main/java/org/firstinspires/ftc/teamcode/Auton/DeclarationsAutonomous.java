@@ -83,7 +83,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 82.5;
+    double armScoringRotation = 65;
     double armPVal = .025;
     double armPower;
 
@@ -232,6 +232,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
+        unextendHangSlide();
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
         if (heading == 84.17){
@@ -333,10 +334,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
             double error = distance - ThisLoopDistance;
             int Direction = (int) -Range.clip(error, -1, 1);
             if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .25, targetSpeed), Direction);
+                gyroDrive(startHeading, Range.clip(Math.abs(error/100), .25, targetSpeed), Direction);
                 //sensor val is bad, stop bot so it doesn't go too far
             }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/70), .25, targetSpeed), Direction);
+                gyroDrive(startHeading, Range.clip(Math.abs(error/100), .25, targetSpeed), Direction);
             }else{
                 stopDriveMotors();
                 foundTarget = true;
@@ -370,9 +371,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double PosOrNeg = 1;
         double SpeedError;
         double error = getError(angle);
-        double minTurnSpeed = .5;//definetly play with this val
+        double minTurnSpeed = .35;//definetly play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
+        unextendHangSlide();
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
             leftSpeed  = 0;
@@ -387,7 +389,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             PosOrNeg = Range.clip((int)error, -1, 1);
             steer = getSteer(error, PCoeff);
             //the error/thispower was 175, changed to 100 for more responsiveness
-            leftSpeed  = Range.clip(speed + Math.abs(error/100) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            leftSpeed  = Range.clip(speed + Math.abs(error/175) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
 
             rightSpeed = -leftSpeed;
         }
@@ -511,8 +513,11 @@ public class DeclarationsAutonomous extends LinearOpMode {
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         if(hangSlideIsExtended()){
             HangingSlide.setPower(.5);
+            keepMineralArmUp();
         }else{
             HangingSlide.setPower(0);
+            ArmTop.setPower(0);
+            ArmBottom.setPower(0);
         }
     }
     public boolean hangSlideIsExtended(){
@@ -523,7 +528,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
     }
     public void craterSideSample(){
-        //should come immediately after unlatching
+        /*//should come immediately after unlatching
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
@@ -544,7 +549,30 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }else{
             encoderDrive(.35, 24, forward, stayOnHeading, 5);
         }
-
+*/
+        ElapsedTime elapsedTime = new ElapsedTime();
+//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+        gyroTurn(turningSpeed, 0);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        gyroTurn(turningSpeed, 15);
+        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            getGoldPositionOneMineral();
+            unextendHangSlide();
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+            //Position 1 is the leftmost mineral
+        }
+        gyroTurn(turningSpeed, decideFirstSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
+        }else{
+            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+        }
     }
     public void depotSideSample(){
         ElapsedTime elapsedTime = new ElapsedTime();
@@ -568,7 +596,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         if(goldPosition == 2){
             encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
         }else{
-            encoderDrive(.5, 22, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
         }
     }
     public void neutralSideSample(){
@@ -625,24 +653,26 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
         // we get a little bit of extra time for cycles.
         gyroTurn(turningSpeed, 45);
-        encoderDrive(.35, 18, forward, stayOnHeading, 2);
+        encoderDrive(.425, 18, forward, stayOnHeading, 2);
+        double thisHeading = getHeading();
         encoderDrive(.35, 2, reverse, stayOnHeading, 1.5);
         TeamMarker.setPosition(teamMarkerResting);
-        gyroTurn(turningSpeed, -45);
+        double turningHeading = -thisHeading - 89;
+        gyroTurn(turningSpeed, turningHeading);
     }
     public void depotSideDoubleSample(){
-        goToDistance(.425, 90, FrontDistance,5,3);
+        goToDistance(.35, 100, FrontDistance,5,3);
         gyroTurn(turningSpeed, -30);
         encoderDrive(.75, 18, reverse, stayOnHeading, 3);
-        gyroTurn(turningSpeed, 20);
-        encoderDrive(.75, 24, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, 18);
+        encoderDrive(.75, 20, reverse, stayOnHeading, 3);
         gyroTurn(turningSpeed, 90);
         encoderDrive(.2, 4, reverse, stayOnHeading, 1.25);
         gyroTurn(turningSpeed, decideSecondSampleheading());
         if(goldPosition == 2){
-            encoderDrive(.5, 12, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
         }else{
-            encoderDrive(.5, 18, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
         }
     }
     public void driveFromDepot(){}
@@ -666,17 +696,18 @@ public class DeclarationsAutonomous extends LinearOpMode {
         telemetry.update();
         return heading;
     }
+
     public double decideSecondSampleheading(){
         double heading = getHeading();
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = 40   ;
+            heading = 60   ;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 90;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 140;
+            heading = 120;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -745,12 +776,17 @@ public class DeclarationsAutonomous extends LinearOpMode {
                     for (Recognition recognition : updatedRecognitions) {
                         if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                             goldMineralX = (int) recognition.getLeft();
+                            //if gold is found, label it as such
                         } else {
                             //then it's only silver seen, or nothing at all
                         }
                     }
                     if(updatedRecognitions.size() > 0) {
+                        //if we have detected any minerals, check and see if we've seen gold
+                        //if we have, then if it's on one side of the screen or the other.
                         if (goldMineralX != -1) {
+                            //Regardless of if we've seen any other minerals, We can get the gold
+                            //position via this
                             if (goldMineralX > 600) {
                                 telemetry.addData("Gold Mineral Position", "Right ");
                                 goldPosition = 3;
@@ -761,6 +797,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
                         }
                     }else if(updatedRecognitions.size() == 2){
+                        //If we have seen gold, check the gold mineral's pixels X position and see
+                        //if it's on the left or right side of the center.
                         if (goldMineralX != -1) {
                             if (goldMineralX > 600) {
                                 telemetry.addData("Gold Mineral Position", "Right ");
@@ -771,10 +809,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
                             }
 
                         }else{
+                            //if we see two minerals, and neither are gold, then we know the gold
+                            // is on the left side
                             telemetry.addData("Gold Mineral Position", "Left");
                             goldPosition = 1;
                         }
                     }
+                    //else if we've seen no minerals, continue looping.
                     telemetry.addData("Gold pos", goldPosition);
                     telemetry.addData("Gold X pos", goldMineralX);
                     telemetry.addData("Silver1 X pos", silverMineral1X);
@@ -798,37 +839,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     public void endAuto(){
         //telemetry for autonomous testing to see any factors that may have went wrong
+        while(opModeIsActive() && hangSlideIsExtended()){
+
+        }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();
     }
-        // End Regular 85 point functions
-
-        // Start Multi-glyph functions
- /* public void findWall(double speed, double distance, double Timeout){
-        int badLoopTimer = 0;
-        double startHeading = getHeading();
-        boolean foundWall = false;
-        double timeout = runtime.seconds() + Timeout;
-        int ThisLoopDistance;
-        while (opModeIsActive() && !foundWall && (runtime.seconds() < timeout)) {
-            //we can tell if the sensor value is bad, but in this case we don't do anything with it
-            ThisLoopDistance = BackDistance.getDistance();
-            if(ThisLoopDistance > 200 || ThisLoopDistance < 21){
-                //sensor val is bad, skip this loop
-                moveBy(speed, 0, 0);
-                badLoopTimer++;
-            }else if(ThisLoopDistance > distance){
-                moveBy(speed, 0, 0);
-            }else{
-                stopDriveMotors();
-                foundWall = true;
-            }
-            telemetry.addData("Distance", BackDistance.getDistance());
-            telemetry.update();
-            smartIntake();
-        }
-    }
-   */
-
-
 }

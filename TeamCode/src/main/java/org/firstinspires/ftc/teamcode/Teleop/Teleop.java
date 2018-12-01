@@ -30,12 +30,6 @@ public class Teleop extends OpMode {
     public DcMotor ArmBottom = null;
     public DcMotor ArmSlide = null;
 
-    //public DcMotor ArmTop = null;
-    //public DcMotor ArmMid = null;
-    //public DcMotor ArmBottom = null;
-    //public DcMotor ArmSlide = null;
-
-
     // Declare Servos
     public CRServo IntakeLeft;
     public CRServo IntakeRight;
@@ -44,9 +38,7 @@ public class Teleop extends OpMode {
     public Servo TeamMarker;
     public Servo IntakeFlapLeft;
     public Servo IntakeFlapRight;
-    //public CRServo IntakeLeft;                  // Rev SRS
-    //public Servo PTOShifterLeft;                      // Rev SRS
-    //public Servo PTOShifterRight;
+
     public DigitalChannel HangSlideLimit;
     public AnalogInput ArmPot;
     double potMagicNumber = .01222;
@@ -76,7 +68,7 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 80;
+    double armScoringRotation = 78.5;
     double armPVal = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
 
@@ -113,32 +105,32 @@ public class Teleop extends OpMode {
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
 
         ArmPot = hardwareMap.analogInput.get("ArmPot");
+
         LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
         LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
         RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
         RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+
         HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
+        IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        /*ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        ArmMid.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-*/
-
-    }
+        }
 
     @Override
     public void init_loop() {
+        //There's the small problem of the E4s crashing, which is fixed by sending telemetry to
+        //the phone during initialization()
         telemetry.addData("Status", "Waiting in Init plz don't crash E4s");
         telemetry.addData("Cuz Like", "That would really suck");
         telemetry.update();
@@ -151,99 +143,133 @@ public class Teleop extends OpMode {
 
     @Override
     public void loop() {
+
         potRotation = ArmPot.getVoltage()/potMagicNumber;
 
-        if(gamepad2.right_bumper){
+        if(gamepad2.right_bumper || gamepad1.dpad_up){
+            //This section of code is a proportional system that rotates our mineral scoring system
+            //into place.  This lets Samuel rotate the arm into place with just the push of a button
+            // instead of trying to rotate it into place manually.
             armRotError = (Math.abs(potRotation)-Math.abs(armScoringRotation));
             armPower = Range.clip(armRotError*armPVal, -1, 1);
+            //This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
+            //this means that further away from the proper rotation (when the arm is down) the power
+            //is greater than when it's close to the target.
         }else {
+            //All these loops do is keep our arm from breaking itself.  We use the Rev potentiometer
+            // to get the rotation of the arm, and have done testing with these limits to make sure
+            // they are in the right place.
             if (potRotation <= 45) {
+                //if the arm is too far back, move it up slowly
                 armPower = Range.clip(-gamepad2.left_stick_y - .2, -1, 0);
             } else if (potRotation < 50) {
+                //if it's at the limits, allow no more movement backward
                 armPower = Range.clip(-gamepad2.left_stick_y, -1, 0);
             } else if (potRotation >= 50 && potRotation <= 65) {
+                //if it's close to the limits, let it move slowly
                 armPower = Range.clip(-gamepad2.left_stick_y, -1, .25);
             } else if (potRotation >= 175 && potRotation <= 195) {
+                //if it's close to the limits, let it move slowly
                 armPower = Range.clip(-gamepad2.left_stick_y, -.35, 1);
-            } else if (potRotation >= 195 && potRotation <= 20d) {
+            } else if (potRotation >= 195 && potRotation <= 200) {
+                //if it's at the down limits, allow no more forward rotation
                 armPower = Range.clip(-gamepad2.left_stick_y, 0, 1);
             } else if (potRotation >= 200) {
+                //if it's past the limits, move it back into it's limits slowly
                 armPower = Range.clip(-gamepad2.left_stick_y + .2, 0, 1);
             } else {
+                //Otherwise, if it's not being controlled by limits, just give full power to the joystick
                 armPower = -gamepad2.left_stick_y;
             }
         }
 
         if(gamepad2.left_trigger > .1){
+            //This is a slow mode for the
             armPower = armPower * .35;
         }
 
-        if(gamepad1.right_trigger > .1){
-            armSlidePower = gamepad1.right_trigger;
-        }else if(gamepad1.left_trigger > .1){
-            armSlidePower = gamepad1.left_trigger;
-        }else{
-            armSlidePower = 0;
-        }
+
 
         if(gamepad2.right_trigger > .1) {
+            //Slow intake mode for Samuel
             intakePower = Range.clip(gamepad2.right_trigger/3,-.7,.7);
         }else if(gamepad1.right_bumper) {
+            //Let Isaac set full power to the intake
             intakePower = .7;
-        }else if(gamepad1.start || gamepad2.start) {
+        }else if(gamepad1.left_bumper || gamepad2.start) {
+            //Reverse the intake
             intakePower = -.7;
         }else{
+            //If none of the other things are happening, intake is off
             intakePower = 0;
         }
 
-
-
         if(gamepad2.dpad_down){
+            //Silver side, automatically open and spin intake at .15 speed
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightOpen);
-            intakePower = .3;
+            intakePower = .25;
         }else if(gamepad2.dpad_up) {
+            //button to close the intake
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }else if(gamepad2.dpad_left){
+            //Gold side, automatically open halfway and spin intake at full speed
             IntakeFlapLeft.setPosition(.4);
             IntakeFlapRight.setPosition(.6);
             intakePower = .7;
         }else{
+            //If we're not scoring, then close the intake
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }
 
         if(gamepad2.left_bumper){
             if (HangSlideLimit.getState() == false) {
-                //hanging slide is down
+                //hanging slide is down, sensed by the limit switch
                 hangingMotorPower = Range.clip(gamepad2.right_stick_y, -1, 0);
             } else {
-                //if(HangingSlide.getCurrentPosition() < ticksToExtendHang)
                 hangingMotorPower = gamepad2.right_stick_y;
             }
         }else {
-            hangingMotorPower = 0;
+            if (HangSlideLimit.getState() == false) {
+                //hanging slide is down
+                hangingMotorPower = Range.clip(-gamepad1.left_trigger, -1, 0);
+            } else {
+                if(gamepad1.right_trigger > .1){
+                //Allow control on gamepad 1 to hang, which should help increase speed of hanging
+                    hangingMotorPower = gamepad1.right_trigger;
+                }else if(gamepad1.left_trigger > .1){
+                    hangingMotorPower = -gamepad1.left_trigger;
+                }else{
+                    hangingMotorPower = 0;
+                }
+            }
             armSlidePower = -gamepad2.right_stick_y;
         }
 
-        if(gamepad2.a){
+        if(gamepad2.a || gamepad1.a){
+            //If either of the a buttons are pressed, engage the ratchet system
             hangRatchetEngaged = true;
-        }else if (gamepad2.b){
+        }else if (gamepad2.b || gamepad1.b){
+            //if either of the b buttons are pressed, disengage the ratchet system
             hangRatchetEngaged = false;
         }
 
 
+        //Set drivetrain motor power
         leftPower = gamepad1.left_stick_y;
         rightPower = gamepad1.right_stick_y;
 
+        //set the power variables to the motors
         setPowers();
+
+        //print out telemetry to the driver station
         doTelemetry();
     }
 
     public void setPowers(){
-        TeamMarker.setPosition(teamMarkerResting)
-        ;
+        //Set motor powers
         LeftTop.setPower(leftPower);
         LeftBottom.setPower(leftPower);
         RightTop.setPower(rightPower);
@@ -256,10 +282,13 @@ public class Teleop extends OpMode {
         HangingSlide.setPower(hangingMotorPower);
 
 
+        //Set servo positions/powers
 
+        //set intake speed
         IntakeLeft.setPower(intakePower);
         IntakeRight.setPower(intakePower);
 
+        //Set ratchet servo positions
         if(hangRatchetEngaged) {
             HangCamLeft.setPosition(hangCamLeftEngagedPos);
             HangCamRight.setPosition(hangCamRightEngagedPos);

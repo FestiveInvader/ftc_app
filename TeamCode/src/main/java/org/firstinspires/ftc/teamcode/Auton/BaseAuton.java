@@ -6,8 +6,7 @@ public class BaseAuton extends DeclarationsAutonomous {
     public void runOpMode() {
         super.runOpMode();
         int loops = 0;
-        goToDistance(.5, 190, FrontDistance, 5, 2);
-
+        encoderDrive(.3, 54,forward,stayOnHeading,10);
         //endAuto();
     }
 }
