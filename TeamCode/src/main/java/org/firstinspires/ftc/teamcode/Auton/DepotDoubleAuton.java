@@ -12,7 +12,6 @@ public class DepotDoubleAuton extends DeclarationsAutonomous {
         depotTurnToCloseCrater();
         deployTeamMarker();
         depotSideDoubleSample();
-        TeamMarker.setPosition(teamMarkerResting);
-        //endAuto();
+        endAuto();
     }
 }

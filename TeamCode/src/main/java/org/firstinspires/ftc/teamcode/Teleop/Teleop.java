@@ -11,8 +11,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorDigitalTouch;
-
 import static com.qualcomm.robotcore.util.Range.clip;
 
 
@@ -68,7 +66,7 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 78.5;
+    double armScoringRotation = 65;
     double armPVal = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
 
@@ -146,6 +144,7 @@ public class Teleop extends OpMode {
 
         potRotation = ArmPot.getVoltage()/potMagicNumber;
 
+
         if(gamepad2.right_bumper || gamepad1.dpad_up){
             //This section of code is a proportional system that rotates our mineral scoring system
             //into place.  This lets Samuel rotate the arm into place with just the push of a button
@@ -159,13 +158,13 @@ public class Teleop extends OpMode {
             //All these loops do is keep our arm from breaking itself.  We use the Rev potentiometer
             // to get the rotation of the arm, and have done testing with these limits to make sure
             // they are in the right place.
-            if (potRotation <= 45) {
+            if (potRotation <= 35) {
                 //if the arm is too far back, move it up slowly
                 armPower = Range.clip(-gamepad2.left_stick_y - .2, -1, 0);
-            } else if (potRotation < 50) {
+            } else if (potRotation < 40) {
                 //if it's at the limits, allow no more movement backward
                 armPower = Range.clip(-gamepad2.left_stick_y, -1, 0);
-            } else if (potRotation >= 50 && potRotation <= 65) {
+            } else if (potRotation >= 40 && potRotation <= 50) {
                 //if it's close to the limits, let it move slowly
                 armPower = Range.clip(-gamepad2.left_stick_y, -1, .25);
             } else if (potRotation >= 175 && potRotation <= 195) {
@@ -187,7 +186,6 @@ public class Teleop extends OpMode {
             //This is a slow mode for the
             armPower = armPower * .35;
         }
-
 
 
         if(gamepad2.right_trigger > .1) {
@@ -224,6 +222,21 @@ public class Teleop extends OpMode {
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }
 
+        /*if(gamepad1.right_trigger > .1){
+            if(hangRatchetEngaged){
+
+                //wait a second before allowing power
+                hangRatchetEngaged= false;
+            }else{
+                //motor power = gamepad1.right_trigger;
+            }
+        }
+        if(gamepad1.left_trigger > .1){
+            hangRatchetEngaged = true;
+            //motorPower = trigger down
+        }*/
+
+
         if(gamepad2.left_bumper){
             if (HangSlideLimit.getState() == false) {
                 //hanging slide is down, sensed by the limit switch
@@ -248,10 +261,10 @@ public class Teleop extends OpMode {
             armSlidePower = -gamepad2.right_stick_y;
         }
 
-        if(gamepad2.a || gamepad1.a){
+        if(gamepad1.a){
             //If either of the a buttons are pressed, engage the ratchet system
             hangRatchetEngaged = true;
-        }else if (gamepad2.b || gamepad1.b){
+        }else if (gamepad1.b){
             //if either of the b buttons are pressed, disengage the ratchet system
             hangRatchetEngaged = false;
         }

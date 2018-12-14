@@ -83,7 +83,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 65;
+    double armScoringRotation = 50;
     double armPVal = .025;
     double armPower;
 
@@ -643,10 +643,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
         // we get a little bit of extra time for cycles.
         gyroTurn(turningSpeed, -45);
-        encoderDrive(.35, 18, forward, stayOnHeading, 2);
+        encoderDrive(.425, 18, forward, stayOnHeading, 2);
+        double thisHeading = getHeading();
         encoderDrive(.35, 2.5, reverse, stayOnHeading, 1.5);
         TeamMarker.setPosition(teamMarkerResting);
-        gyroTurn(turningSpeed, 50);
+        double turningHeading = -thisHeading + 91;
+        gyroTurn(turningSpeed, turningHeading);
     }
     public void depotTurnToCloseCrater(){
         //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
@@ -839,6 +841,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     public void endAuto(){
         //telemetry for autonomous testing to see any factors that may have went wrong
+        TeamMarker.setPosition(teamMarkerResting);
         while(opModeIsActive() && hangSlideIsExtended()){
 
         }

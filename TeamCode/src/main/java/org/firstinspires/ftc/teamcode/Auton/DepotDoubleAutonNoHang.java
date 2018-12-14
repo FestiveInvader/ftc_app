@@ -1,17 +1,17 @@
 package org.firstinspires.ftc.teamcode.Auton;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name="Depot side | Basic ", group="Depot")
-public class DepotBaseAuton extends DeclarationsAutonomous {
+@Autonomous(name="Depot side | Double sample no hang ", group="Depot")
+public class DepotDoubleAutonNoHang extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unlatch();
+        //unlatch();
         depotSideSample();
         depotSideDeployMarker();
-        depotTurnToFarCrater();
+        depotTurnToCloseCrater();
         deployTeamMarker();
-        encoderDrive(.75, 64, reverse, stayOnHeading, 5);
+        depotSideDoubleSample();
         endAuto();
     }
 }
