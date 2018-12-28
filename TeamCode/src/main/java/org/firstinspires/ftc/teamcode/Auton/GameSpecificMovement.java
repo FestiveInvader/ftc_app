@@ -218,9 +218,11 @@ public class GameSpecificMovement extends LinearOpMode {
         }
         genMovement.gyroTurn(turningSpeed, vision.decideFirstSampleheading());
         if(goldPosition == 2){
-            genMovement.encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
+            genMovement.encoderDrive(.5, 12, forward, vision.decideFirstSampleheading(), 2.5);
+            genMovement.encoderDrive(.5, 12, reverse, vision.decideFirstSampleheading(), 2.5);
         }else{
-            genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+            genMovement.encoderDrive(.5, 20, forward, vision.decideFirstSampleheading(), 2.5);
+            genMovement.encoderDrive(.5, 20, reverse, vision.decideFirstSampleheading(), 2.5);
         }
     }
     public void depotSideSample(){
@@ -243,47 +245,26 @@ public class GameSpecificMovement extends LinearOpMode {
         }
         genMovement.gyroTurn(turningSpeed, vision.decideFirstSampleheading());
         if(goldPosition == 2){
-            genMovement.encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
+            genMovement.encoderDrive(.5, 12, forward, vision.decideFirstSampleheading(), 2.5);
+            genMovement.encoderDrive(.5, 12, reverse, vision.decideFirstSampleheading(), 2.5);
         }else{
-            genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+            genMovement.encoderDrive(.5, 18, forward, vision.decideFirstSampleheading(), 2.5);
+            genMovement.encoderDrive(.5, 18, reverse, vision.decideFirstSampleheading(), 2.5);
         }
     }
-    public void neutralSideSample(){
-        double heading = genMovement.getHeading();
-        ElapsedTime elapsedTime = new ElapsedTime();
-//should come immediately after unlatching
-        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
-        //for the team marker may have to be made.
 
-        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
-            vision.getGoldPositionOneMineral();
-            hangingSystem.unextendHangSlide();
-        }
-        if(goldPosition == 0){
-            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
-            // the team marker and park
-            goldPosition = 1;
-            //Position 1 is the leftmost mineral
-        }
-        genMovement.gyroTurn(turningSpeed, vision.decideSecondSampleheading());
-        if(goldPosition == 2){
-            genMovement.encoderDrive(.5, 12, forward, stayOnHeading, 5);
-        }else{
-            genMovement.encoderDrive(.5, 18, forward, stayOnHeading, 5);
-        }
-    }
 
     public void depotSideDeployMarker(){
-        if(goldPosition == 1){
-            genMovement.gyroTurn(turningSpeed, 40);
-            genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 2);
-        }else if(goldPosition == 2){
-            //should have already gone all the way straight
-        }else if(goldPosition == 3){
-            genMovement.gyroTurn(turningSpeed, -40);
-            genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 2);
-        }
+        genMovement.gyroTurn(turningSpeed, -90);
+        genMovement.encoderDrive(.5, 12, forward, stayOnHeading, 2);
+        genMovement.gyroTurn(turningSpeed, -45);
+        genMovement.encoderDrive(.35, 36, forward, stayOnHeading, 4);
+        //just hit the wall
+        genMovement.encoderDrive(.2, 3, reverse, stayOnHeading, 2);
+        genMovement.gyroTurn(turningSpeed, 45);
+        genMovement.goToDistance(.35, 50, FrontDistance, 3, 3);
     }
+
     public void deployTeamMarker(){
         TeamMarker.setPosition(teamMarkerDeploy);
     }

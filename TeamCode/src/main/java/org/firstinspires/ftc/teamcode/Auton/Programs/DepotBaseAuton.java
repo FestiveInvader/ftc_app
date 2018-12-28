@@ -12,7 +12,6 @@ public class DepotBaseAuton extends GameSpecificMovement {
         hangingSystem.unlatch();
         depotSideSample();
         depotSideDeployMarker();
-        depotTurnToFarCrater();
         deployTeamMarker();
         genMovement.encoderDrive(.75, 64, reverse, stayOnHeading, 5);
         endAuto();
