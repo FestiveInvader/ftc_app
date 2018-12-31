@@ -7,7 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.Auton.SensorDrivers.I2CXLv2;
+//import org.firstinspires.ftc.teamcode.I2CXLv2;
 
 public class GeneralMovement extends GameSpecificMovement {
     public void drive(double speed, int direction, double time){
@@ -121,7 +121,7 @@ public class GeneralMovement extends GameSpecificMovement {
             stopDriveMotors();
         }
     }
-    public void goToDistance(double targetSpeed, double distance, I2CXLv2 distanceSensor, double timeout, int tolerance){
+    public void goToDistance(double targetSpeed, double distance, double timeout, int tolerance){
         double startTime = runtime.seconds();
         double maxTime = startTime + timeout;
         double startHeading = getHeading();

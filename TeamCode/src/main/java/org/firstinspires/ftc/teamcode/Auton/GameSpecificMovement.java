@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
-import org.firstinspires.ftc.teamcode.Auton.SensorDrivers.I2CXLv2;
+import org.firstinspires.ftc.teamcode.I2CXLv2;
 
 
 //@Author Eric Adams, Team 8417 'Lectric Legends
@@ -70,7 +70,7 @@ public class GameSpecificMovement extends LinearOpMode {
     public double turningSpeed = .4;
 
     double potMagicNumber = .01222;
-    
+
 
     double teamMarkerDeploy = -.1;
     double teamMarkerResting = .3;
@@ -246,7 +246,7 @@ public class GameSpecificMovement extends LinearOpMode {
     public void driveFromCraterAfterSampleToNearDepot(){
         genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 3);
         genMovement.gyroTurn(turningSpeed, -135);//turn to the left, facing the depot
-        genMovement.goToDistance(.35, 55, FrontDistance, 3, 2);
+        genMovement.goToDistance(.35, 55, 3, 2);
     }
 
 
@@ -257,7 +257,7 @@ public class GameSpecificMovement extends LinearOpMode {
         genMovement.encoderDrive(.35, 36, forward, stayOnHeading, 4);//just hit the wall
         genMovement.encoderDrive(.2, 3, reverse, stayOnHeading, 2);//back away from the wall for turning clearance
         genMovement.gyroTurn(turningSpeed, 45);//turn towards the depot
-        genMovement.goToDistance(.35, 50, FrontDistance, 3, 3); //drive to the edge of the depot
+        genMovement.goToDistance(.35, 50, 3, 3); //drive to the edge of the depot
     }
 
     public void deployTeamMarker(){
@@ -288,7 +288,7 @@ public class GameSpecificMovement extends LinearOpMode {
         genMovement.gyroTurn(turningSpeed, turningHeading);
     }
     public void depotSideDoubleSample(){
-        genMovement.goToDistance(.35, 100, FrontDistance,5,3);
+        genMovement.goToDistance(.35, 100, 5,3);
         genMovement.gyroTurn(turningSpeed, -30);
         genMovement.encoderDrive(.75, 18, reverse, stayOnHeading, 3);
         genMovement.gyroTurn(turningSpeed, 18);
@@ -303,7 +303,7 @@ public class GameSpecificMovement extends LinearOpMode {
         }
     }
     public void craterSideParkArmInCrater(){
-        genMovement.goToDistance(.5, 100, FrontDistance,5,4);
+        genMovement.goToDistance(.5, 100, 5,4);
         genMovement.gyroTurn(turningSpeed, -120);
         genMovement.encoderDrive(.75, 18, reverse, stayOnHeading, 3);
         genMovement.gyroTurn(turningSpeed, -72);

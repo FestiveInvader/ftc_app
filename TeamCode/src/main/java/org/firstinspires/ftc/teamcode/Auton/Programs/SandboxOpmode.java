@@ -9,7 +9,7 @@ public class SandboxOpmode extends GameSpecificMovement {
     public void runOpMode() {
         super.runOpMode();
         int loops = 0;
-        genMovement.encoderDrive(.3, 54,forward, stayOnHeading,10);
+        genMovement.encoderDrive(.3, 10 ,forward, stayOnHeading,10);
         //endAuto();
     }
 }

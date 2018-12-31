@@ -20,6 +20,6 @@ public class CraterBaseAuton extends GameSpecificMovement {
         genMovement.encoderDrive(.35, 24, forward, stayOnHeading, 1);
         deployTeamMarker();
         craterSideParkArmInCrater();
-        endAuto();
+        endAuto(false);
     }
 }
