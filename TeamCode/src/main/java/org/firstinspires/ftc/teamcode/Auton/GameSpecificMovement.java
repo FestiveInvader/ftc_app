@@ -67,19 +67,10 @@ public class GameSpecificMovement extends LinearOpMode {
     double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
     double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
-    double turningSpeed = .4;
+    public double turningSpeed = .4;
 
     double potMagicNumber = .01222;
-
-    boolean hangRatchetEngaged = true;
-    double hangCamLeftEngagedPos = 1;
-    double hangCamLeftUnengagedPos = 0;
-    double hangCamRightEngagedPos = 0;
-    double hangCamRightUnengagedPos = 1;
-
-    double armScoringRotation = 50;
-    double armPVal = .025;
-    double armPower;
+    
 
     double teamMarkerDeploy = -.1;
     double teamMarkerResting = .3;
@@ -252,17 +243,21 @@ public class GameSpecificMovement extends LinearOpMode {
             genMovement.encoderDrive(.5, 18, reverse, vision.decideFirstSampleheading(), 2.5);
         }
     }
+    public void driveFromCraterAfterSampleToNearDepot(){
+        genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 3);
+        genMovement.gyroTurn(turningSpeed, -135);//turn to the left, facing the depot
+        genMovement.goToDistance(.35, 55, FrontDistance, 3, 2);
+    }
 
 
     public void depotSideDeployMarker(){
-        genMovement.gyroTurn(turningSpeed, -90);
+        genMovement.gyroTurn(turningSpeed, -90);//At this point we'll be facing the other alliances crater-ish
         genMovement.encoderDrive(.5, 12, forward, stayOnHeading, 2);
-        genMovement.gyroTurn(turningSpeed, -45);
-        genMovement.encoderDrive(.35, 36, forward, stayOnHeading, 4);
-        //just hit the wall
-        genMovement.encoderDrive(.2, 3, reverse, stayOnHeading, 2);
-        genMovement.gyroTurn(turningSpeed, 45);
-        genMovement.goToDistance(.35, 50, FrontDistance, 3, 3);
+        genMovement.gyroTurn(turningSpeed, -45);//face the near non-alliance wall
+        genMovement.encoderDrive(.35, 36, forward, stayOnHeading, 4);//just hit the wall
+        genMovement.encoderDrive(.2, 3, reverse, stayOnHeading, 2);//back away from the wall for turning clearance
+        genMovement.gyroTurn(turningSpeed, 45);//turn towards the depot
+        genMovement.goToDistance(.35, 50, FrontDistance, 3, 3); //drive to the edge of the depot
     }
 
     public void deployTeamMarker(){
@@ -307,6 +302,14 @@ public class GameSpecificMovement extends LinearOpMode {
             genMovement.encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
         }
     }
+    public void craterSideParkArmInCrater(){
+        genMovement.goToDistance(.5, 100, FrontDistance,5,4);
+        genMovement.gyroTurn(turningSpeed, -120);
+        genMovement.encoderDrive(.75, 18, reverse, stayOnHeading, 3);
+        genMovement.gyroTurn(turningSpeed, -72);
+        genMovement.encoderDrive(.75, 20, reverse, stayOnHeading, 3);
+        genMovement.gyroTurn(turningSpeed, 0);
+    }
     public void driveFromDepot(){}
 
 
@@ -318,11 +321,16 @@ public class GameSpecificMovement extends LinearOpMode {
     turn left
     */
 
-    public void endAuto(){
+    public void endAuto(boolean endWithArmUp){
         //telemetry for autonomous testing to see any factors that may have went wrong
         TeamMarker.setPosition(teamMarkerResting);
-        while(opModeIsActive() && hangingSystem.hangSlideIsExtended()){
-
+        if(endWithArmUp) {
+            while (opModeIsActive() && hangingSystem.hangSlideIsExtended()) {}
+        }else{
+            while (opModeIsActive()) {
+                hangingSystem.unextendHangSlide();
+                hangingSystem.putMineralArmDown();
+            }
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();

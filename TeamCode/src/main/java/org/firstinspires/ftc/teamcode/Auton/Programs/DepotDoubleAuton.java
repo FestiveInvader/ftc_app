@@ -1,3 +1,4 @@
+/*
 package org.firstinspires.ftc.teamcode.Auton.Programs;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -17,3 +18,6 @@ public class DepotDoubleAuton extends GameSpecificMo {
         endAuto();
     }
 }
+
+MOST LIKELY THIS OPMODE IS GOING TO BE DELETED
+*/

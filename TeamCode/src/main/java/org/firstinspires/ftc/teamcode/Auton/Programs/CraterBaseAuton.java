@@ -12,6 +12,14 @@ public class CraterBaseAuton extends GameSpecificMovement {
         super.runOpMode();
         hangingSystem.unlatch();
         craterSideSample();
+        genMovement.gyroTurn(turningSpeed, -90);//turn to the left, facing the depot-ish
+        //This step should be a function driving to the depot to either wait to place the marker
+        //Or to place it and sample the other team's sample
+        driveFromCraterAfterSampleToNearDepot();
+        //sleep here for allowing partner to place
+        genMovement.encoderDrive(.35, 24, forward, stayOnHeading, 1);
+        deployTeamMarker();
+        craterSideParkArmInCrater();
         endAuto();
     }
 }
