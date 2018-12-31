@@ -121,33 +121,6 @@ public class GeneralMovement extends GameSpecificMovement {
             stopDriveMotors();
         }
     }
-    public void goToDistance(double targetSpeed, double distance, double timeout, int tolerance){
-        double startTime = runtime.seconds();
-        double maxTime = startTime + timeout;
-        double startHeading = getHeading();
-        boolean foundTarget = false;
-        int ThisLoopDistance;
-        while (opModeIsActive() && !foundTarget && maxTime - runtime.seconds() > .1) {
-            ThisLoopDistance = FrontDistance.getDistance();
-            double error = distance - ThisLoopDistance;
-            int Direction = (int) -Range.clip(error, -1, 1);
-            if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/100), .25, targetSpeed), Direction);
-                //sensor val is bad, stop bot so it doesn't go too far
-            }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/100), .25, targetSpeed), Direction);
-            }else{
-                stopDriveMotors();
-                foundTarget = true;
-            }
-            telemetry.addData("Distance", ThisLoopDistance);
-            telemetry.addData("error", error);
-            telemetry.addData("speed", LeftTop.getPower());
-            telemetry.update();
-        }
-        stopDriveMotors();
-    }
-
 
     public void gyroTurn(double speed, double angle) {
         // keep looping while we are still active, and not on heading.
