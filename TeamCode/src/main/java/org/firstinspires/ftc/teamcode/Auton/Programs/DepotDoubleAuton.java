@@ -1,4 +1,3 @@
-<<<<<<< HEAD:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Auton/Programs/DepotDoubleAuton.java
 /*
 package org.firstinspires.ftc.teamcode.Auton.Programs;
 =======

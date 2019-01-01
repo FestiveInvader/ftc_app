@@ -1,5 +1,8 @@
-package org.firstinspires.ftc.teamcode.Auton;
+package org.firstinspires.ftc.teamcode.Auton.Programs;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
+import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
+
 @Autonomous(name="Auton Test ", group="Test")
 public class BaseAuton extends DeclarationsAutonomous {
     @Override

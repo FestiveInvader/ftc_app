@@ -73,7 +73,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
     double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
-    double turningSpeed = .4;
+    public double turningSpeed = .4;
 
     double potMagicNumber = .01222;
 
@@ -92,10 +92,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     int goldPosition = 0;
 
-    int forward = 1;
-    int reverse = -1;
+    public int forward = 1;
+    public int reverse = -1;
     double programStartOrientation;
-    double stayOnHeading = 84.17;
+    public double stayOnHeading = 84.17;
 
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
