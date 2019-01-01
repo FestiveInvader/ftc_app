@@ -84,6 +84,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightUnengagedPos = 1;
 
     double armScoringRotation = 50;
+    double armDownRotation = 170;
     double armPVal = .025;
     double armPower;
 
@@ -227,7 +228,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         stopDriveMotors();
     }
-
     public void encoderDrive(double speed, double Inches, int direction, double heading, double timeout) {
         double startTime = runtime.seconds();
         double Heading = 0;
@@ -349,8 +349,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         stopDriveMotors();
     }
-
-
     public void gyroTurn(double speed, double angle) {
         // keep looping while we are still active, and not on heading.
         //uses onHeading to actually turn the robot/figure out error
@@ -476,8 +474,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         RightTop.setPower(rotationSpeed*direction);
         RightBottom.setPower(rotationSpeed*direction);
     }
-
-
     //End General movement functions
 
     //Start Rover Ruckus specific movement and logic functions
@@ -503,6 +499,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void keepMineralArmUp(){
         double potRotation = ArmPot.getVoltage()/potMagicNumber;
         double armRotError = (Math.abs(potRotation)-Math.abs(armScoringRotation));
+
+        armPower = Range.clip(armRotError*armPVal, -1, 1);
+        ArmTop.setPower(armPower);
+        ArmBottom.setPower(armPower);
+    }
+    public void putMineralArmDown(){
+        double potRotation = ArmPot.getVoltage()/potMagicNumber;
+        double armRotError = (Math.abs(potRotation)-Math.abs(armDownRotation));
 
         armPower = Range.clip(armRotError*armPVal, -1, 1);
         ArmTop.setPower(armPower);
@@ -622,6 +626,21 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }else{
             encoderDrive(.5, 18, forward, stayOnHeading, 5);
         }
+    }
+
+    public void craterSideParkArmInCrater(){
+        goToDistance(.5, 100, FrontDistance,4, 4    );
+        gyroTurn(turningSpeed, -120);
+        encoderDrive(.75, 18, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, -72);
+        encoderDrive(.75, 20, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, 0);
+    }
+
+    public void driveFromCraterAfterSampleToNearDepot(){
+        encoderDrive(.5, 24, forward, stayOnHeading, 3);
+        gyroTurn(turningSpeed, -135);//turn to the left, facing the depot
+        goToDistance(.35, 55, FrontDistance, 3, 2);
     }
 
     public void depotSideDeployMarker(){
@@ -839,11 +858,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
     turn left
     */
 
-    public void endAuto(){
+    public void endAuto(boolean endWithArmUp){
         //telemetry for autonomous testing to see any factors that may have went wrong
         TeamMarker.setPosition(teamMarkerResting);
-        while(opModeIsActive() && hangSlideIsExtended()){
-
+        if(endWithArmUp) {
+            while (opModeIsActive() && hangSlideIsExtended()) {}
+        }else{
+            while (opModeIsActive()) {
+                unextendHangSlide();
+                putMineralArmDown();
+            }
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();

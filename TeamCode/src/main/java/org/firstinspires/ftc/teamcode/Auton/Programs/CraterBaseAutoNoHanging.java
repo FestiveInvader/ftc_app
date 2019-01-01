@@ -10,6 +10,6 @@ public class CraterBaseAutoNoHanging extends DeclarationsAutonomous {
         super.runOpMode();
         //unlatch();
         craterSideSample();
-        endAuto();
+        endAuto(true);
     }
 }

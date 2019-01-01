@@ -14,6 +14,6 @@ public class DepotBaseAutonNoHang extends DeclarationsAutonomous {
         depotTurnToFarCrater();
         deployTeamMarker();
         encoderDrive(.75, 64, reverse, stayOnHeading, 5);
-        endAuto();
+        endAuto(true);
     }
 }
