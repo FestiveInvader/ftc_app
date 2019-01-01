@@ -99,6 +99,9 @@ public class GameSpecificMovement extends LinearOpMode {
     public VuforiaLocalizer vuforia;
     public TFObjectDetector tfod;
 
+    public GeneralMovement genMovement = new GeneralMovement();
+    public HangingSystem hangingSystem = new HangingSystem();
+
     public ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -168,11 +171,11 @@ public class GameSpecificMovement extends LinearOpMode {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
 
-        while(!isStarted()) {
-            telemetry.addData("IMU", GeneralMovement.getHeading());
+        while(!opModeIsActive()&&!isStopRequested()) {
+            telemetry.addData("IMU", genMovement.getHeading());
             telemetry.addData("FrontLeft Encoder", LeftTop.getCurrentPosition());
             telemetry.addData("If values are good, then run", 1);
-            telemetry.addData("If I don't put this here then it'll probably crash", 1);
+            telemetry.addData("If I don't put the not !waitforstart or whatever here then it'll probably crash", 1);
             telemetry.update();
         }
         ElapsedTime timer = new ElapsedTime();

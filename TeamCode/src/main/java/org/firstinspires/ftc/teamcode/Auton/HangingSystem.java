@@ -52,7 +52,7 @@ public class HangingSystem extends GameSpecificMovement {
         ArmTop.setPower(armPower);
         ArmBottom.setPower(armPower);
     }
-    public void unextendHangSlide(){
+    public  void unextendHangSlide(){
         //this is made so it can be in a loop by itself, or in another loop.
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         if(hangSlideIsExtended()){
@@ -64,7 +64,7 @@ public class HangingSystem extends GameSpecificMovement {
             ArmBottom.setPower(0);
         }
     }
-    public boolean hangSlideIsExtended(){
+    public  boolean hangSlideIsExtended(){
         if(HangSlideLimit.getState() == false){
             slideExtended = false;
         }
