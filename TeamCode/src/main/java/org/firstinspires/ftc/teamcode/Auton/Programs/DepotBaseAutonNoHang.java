@@ -10,7 +10,7 @@ public class DepotBaseAutonNoHang extends DeclarationsAutonomous {
         super.runOpMode();
         //unlatch();
         depotSideSample();
-        depotSideDeployMarker();
+        depotSideDeployAndPark();
         depotTurnToFarCrater();
         deployTeamMarker();
         encoderDrive(.75, 64, reverse, stayOnHeading, 5);

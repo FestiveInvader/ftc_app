@@ -11,10 +11,7 @@ public class DepotBaseAuton extends DeclarationsAutonomous {
         super.runOpMode();
         unlatch();
         depotSideSample();
-        depotSideDeployMarker();
-        deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
-        sleep(250);
-        encoderDrive(.75, 64, reverse, stayOnHeading, 5);
+        depotSideDeployAndPark();
         endAuto(true);//Housekeeping, make sure slide is down, etc.
         //Potentially make a depot option that will go park in our crater side by going under the lander?
         //It'd be sweet}

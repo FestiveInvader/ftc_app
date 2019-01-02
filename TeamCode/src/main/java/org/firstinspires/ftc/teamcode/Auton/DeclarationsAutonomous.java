@@ -83,9 +83,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 50;
-    double armDownRotation = 170;
-    double armPVal = .025;
+    double armScoringRotation = 55;
+    double armDownRotation = 150;
+    double armPVal = .015;
     double armPower;
 
     double teamMarkerDeploy = -.1;
@@ -97,6 +97,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public int reverse = -1;
     double programStartOrientation;
     public double stayOnHeading = 84.17;
+
+    boolean hangSlidesDown = false;
 
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
@@ -179,11 +181,11 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
 
-        while(!isStarted()) {
+        while(!opModeIsActive()&&!isStopRequested()) {
             telemetry.addData("IMU", getHeading());
             telemetry.addData("FrontLeft Encoder", LeftTop.getCurrentPosition());
             telemetry.addData("If values are good, then run", 1);
-            telemetry.addData("If I don't put this here then it'll probably crash", 1);
+            telemetry.addData("If I don't put the not !waitforstart or whatever here then it'll probably crash", 1);
             telemetry.update();
         }
         ElapsedTime timer = new ElapsedTime();
@@ -232,7 +234,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
-        unextendHangSlide();
+        unextendHangSlide(true);
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
         if (heading == 84.17){
@@ -261,6 +263,39 @@ public class DeclarationsAutonomous extends LinearOpMode {
             stopDriveMotors();
         }
     }
+    public void encoderDriveSmooth(double speed, double Inches, int direction, double heading, double timeout) {
+        double startTime = runtime.seconds();
+        double Heading = 0;
+        boolean notAtTarget = true;
+        unextendHangSlide(true);
+        //if we give a very very specific value for our heading, than we stay on our current path
+        //otherwise, we get use the gyroDrive to correct to our desired heading
+        if (heading == 84.17){
+            Heading = getHeading();
+        }else{
+            Heading = heading;
+        }
+        double target;
+        if (opModeIsActive() ) {
+            //make sure that the encoder on the front left motor (which, stupidly, is the only motor
+            //we use for distance in this function) is reset to 0
+            LeftTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            LeftTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            LeftBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            RightTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            RightBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            //find the amount of encoder ticks to travel based off of the Inches var
+            target = LeftTop.getCurrentPosition() + (int) (Inches * CountsPerInch * direction);
+            //while the opmode is still running, and we're not at our target yet, and we haven't timed out
+            while(opModeIsActive() && notAtTarget && Math.abs(target) - Math.abs(LeftTop.getCurrentPosition()) > 25
+                    && (startTime + timeout > runtime.seconds())) {
+                //use gyrodrive to set power to the motors.  We have the Heading Var decied earlier,
+                // and speed and direction change base off of speed and direciton given by the user
+                gyroDrive(Heading, speed, direction);
+            }
+        }
+    }
+
     public void EncoderDriveAccelDecel(double speed, double inches, double accelInches, double decelInches, int direction, double heading, double timeout){
         double startTime = runtime.seconds();
         double Heading = 0;
@@ -293,7 +328,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             //else {drive normal}
             while(Math.abs(target) - Math.abs(LeftTop.getCurrentPosition()) > 25 && runtime.seconds() < 28.5 && (startTime + timeout > runtime.seconds())) {
                 double motorPos = Math.abs(LeftTop.getCurrentPosition());
-                unextendHangSlide();
+                unextendHangSlide(true);
                 error = Math.abs(target) - Math.abs(motorPos);
                 if(Math.abs(motorPos) < Math.abs(accelTicks)){
                     //Accel
@@ -372,7 +407,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double minTurnSpeed = .35;//definetly play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
-        unextendHangSlide();
+        unextendHangSlide(true);
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
             leftSpeed  = 0;
@@ -480,7 +515,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void unlatch(){
 
         HangingSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        int inchesToUnlatch = 26;
+        int inchesToUnlatch = 18;
         HangingSlide.setTargetPosition((int) ticksPerHangingInch * -inchesToUnlatch);
         HangCamLeft.setPosition(hangCamLeftUnengagedPos);
         HangCamRight.setPosition(hangCamRightUnengagedPos);
@@ -508,20 +543,24 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double potRotation = ArmPot.getVoltage()/potMagicNumber;
         double armRotError = (Math.abs(potRotation)-Math.abs(armDownRotation));
 
-        armPower = Range.clip(armRotError*armPVal, -1, 1);
+        armPower = Range.clip(armRotError*armPVal, -.5, .5);
         ArmTop.setPower(armPower);
         ArmBottom.setPower(armPower);
     }
-    public void unextendHangSlide(){
+    public void unextendHangSlide(boolean keepArmUp){
         //this is made so it can be in a loop by itself, or in another loop.
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        if(hangSlideIsExtended()){
-            HangingSlide.setPower(.5);
-            keepMineralArmUp();
-        }else{
-            HangingSlide.setPower(0);
-            ArmTop.setPower(0);
-            ArmBottom.setPower(0);
+        HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        if(!hangSlidesDown) {
+            if (hangSlideIsExtended()) {
+                HangingSlide.setPower(.5);
+                if (keepArmUp) {
+                    keepMineralArmUp();
+                }
+            } else {
+                HangingSlide.setPower(0);
+                hangSlidesDown = true;
+            }
         }
     }
     public boolean hangSlideIsExtended(){
@@ -563,7 +602,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, 15);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
             getGoldPositionOneMineral();
-            unextendHangSlide();
+            unextendHangSlide(true);
         }
         if(goldPosition == 0){
             //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
@@ -588,7 +627,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, 15);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
             getGoldPositionOneMineral();
-            unextendHangSlide();
+            unextendHangSlide(true);
         }
         if(goldPosition == 0){
             //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
@@ -599,8 +638,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
         if(goldPosition == 2){
             encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
+        }else if(goldPosition == 3){
+            encoderDrive(.5, 28, forward, stayOnHeading, 2.5);
         }else{
-            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
         }
     }
     public void neutralSideSample(){
@@ -612,7 +653,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
             getGoldPositionOneMineral();
-            unextendHangSlide();
+            unextendHangSlide(true);
         }
         if(goldPosition == 0){
             //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
@@ -643,16 +684,41 @@ public class DeclarationsAutonomous extends LinearOpMode {
         goToDistance(.35, 55, FrontDistance, 3, 2);
     }
 
-    public void depotSideDeployMarker(){
+
+    public void depotSideDeployAndPark(){
         if(goldPosition == 1){
-            gyroTurn(turningSpeed, 40);
-            encoderDrive(.5, 24, forward, stayOnHeading, 2);
+            gyroTurn(turningSpeed, 45);//turn towards the depot
+            encoderDrive(.5, 18, forward, stayOnHeading, 3);
+            deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
+            sleep(250);
+            encoderDrive(.75, 52, reverse, stayOnHeading, 5);
         }else if(goldPosition == 2){
-            //should have already gone all the way straight
-        }else if(goldPosition == 3){
-            gyroTurn(turningSpeed, -40);
-            encoderDrive(.5, 24, forward, stayOnHeading, 2);
+            deployTeamMarker();
+            sleep(200);
+            encoderDrive(.5, 24, reverse, stayOnHeading, 2.5);
+            gyroTurn(turningSpeed, -90);//At this point we'll be facing the other alliances crater-ish
+            encoderDrive(.5, 18, forward, stayOnHeading, 2);
+            gyroTurn(turningSpeed, -45);//face the near non-alliance wall
+            encoderDrive(.35, 36, forward, stayOnHeading, 4);//just hit the wall
+            encoderDrive(.2, 3, reverse, stayOnHeading, 2);//back away from the wall for turning clearance
+            gyroTurn(turningSpeed, 45);//turn towards the depot
+            encoderDrive(.5, 42, reverse, stayOnHeading, 3);
+        }else{
+            gyroTurn(turningSpeed, -45);//face the near non-alliance wall
+            encoderDriveSmooth(.5, 8, forward, stayOnHeading, 2);//just hit the wall
+            encoderDriveSmooth(.35, 8, forward, 90, 2);//just hit the wall
+            encoderDrive(.5, 20, forward, 45, 2);//just hit the wall
+            encoderDrive(.35, 2, reverse, stayOnHeading, 4);//just hit the wall
+            gyroTurn(turningSpeed, 46);
+            deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
+            sleep(250);
+            encoderDrive(.75, 52, reverse, stayOnHeading, 5);
+
         }
+        gyroTurn(turningSpeed, 50);
+        encoderDrive(.5, 12, reverse, stayOnHeading, 5);
+
+
     }
     public void deployTeamMarker(){
         TeamMarker.setPosition(teamMarkerDeploy);
@@ -702,13 +768,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -40   ;
+            heading = -30   ;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 0;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 40;
+            heading = 30;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -859,14 +925,29 @@ public class DeclarationsAutonomous extends LinearOpMode {
     */
 
     public void endAuto(boolean endWithArmUp){
+        ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        double potRotation;
+        boolean putArmDown = true;
         //telemetry for autonomous testing to see any factors that may have went wrong
         TeamMarker.setPosition(teamMarkerResting);
         if(endWithArmUp) {
-            while (opModeIsActive() && hangSlideIsExtended()) {}
+            while (opModeIsActive() && hangSlideIsExtended()) {
+                unextendHangSlide(true);
+            }
         }else{
             while (opModeIsActive()) {
-                unextendHangSlide();
-                putMineralArmDown();
+                potRotation = ArmPot.getVoltage()/potMagicNumber;
+                if(potRotation < 130) {
+                    putMineralArmDown();
+                }else{
+                    ArmTop.setPower(0);
+                    ArmBottom.setPower(0);                }
+                if(hangSlideIsExtended()){
+                    unextendHangSlide(false);
+                }else{
+                    HangingSlide.setPower(0);
+                }
             }
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
