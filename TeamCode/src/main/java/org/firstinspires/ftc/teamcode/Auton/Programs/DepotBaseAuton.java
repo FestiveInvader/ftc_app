@@ -9,7 +9,7 @@ public class DepotBaseAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unlatch();
+        unlatch(18);
         depotSideSample();
         depotSideDeployAndPark();
         endAuto(true);//Housekeeping, make sure slide is down, etc.

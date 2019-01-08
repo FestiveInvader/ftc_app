@@ -8,8 +8,6 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        encoderDrive(.75, 10, forward, stayOnHeading, 10);
-        gyroTurn(turningSpeed, 60);
-        encoderDrive(.75, 20, forward, stayOnHeading, 10);
+        unextendHangSlide(true);
     }
 }
