@@ -230,12 +230,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         stopDriveMotors();
     }
-    public void encoderDrive(double speed, double Inches, int direction, double heading, double timeout) {
+    public void encoderDrive(double speed, double Inches, int direction, double heading, double timeout, boolean armUp) {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
-        if(potRotation() < 130) {
+        if(armUp) {
             unextendHangSlide(true);
+        }else{
+            unextendHangSlide(false);
         }
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
@@ -406,7 +408,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double PosOrNeg = 1;
         double SpeedError;
         double error = getError(angle);
-        double minTurnSpeed = .35;//definetly play with this val
+        double minTurnSpeed = .35;//definitely play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
         unextendHangSlide(true);
@@ -425,7 +427,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             PosOrNeg = Range.clip((int)error, -1, 1);
             steer = getSteer(error, PCoeff);
             //the error/thispower was 175, changed to 100 for more responsiveness
-            leftSpeed  = Range.clip(speed + Math.abs(error/150) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            leftSpeed  = Range.clip(speed + Math.abs(error/175) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
 
             rightSpeed = -leftSpeed;
         }
@@ -541,13 +543,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
         if(!hangSlidesDown) {
             if (hangSlideIsExtended()) {
                 HangingSlide.setPower(.5);
-                if (keepArmUp) {
-                    keepMineralArmUp();
-                }
             } else {
                 HangingSlide.setPower(0);
                 hangSlidesDown = true;
             }
+        }
+        if (keepArmUp) {
+            keepMineralArmUp();
         }
     }
     public boolean hangSlideIsExtended(){
@@ -585,7 +587,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
-        encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
         gyroTurn(turningSpeed, 15);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
             getGoldPositionOneMineral();
@@ -602,9 +604,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
         setIntakePower(.7);
         sleep(250);
         if(goldPosition == 2){
-            encoderDrive(.25, 3, forward, stayOnHeading, 2);
+            encoderDrive(.25, 3, forward, stayOnHeading, 2, false);
         }else{
-            encoderDrive(.25, 6, forward, stayOnHeading, 2);
+            encoderDrive(.25, 6, forward, stayOnHeading, 2, false);
+        }
+        if(goldPosition == 2){
+            encoderDrive(.25, 2, forward, stayOnHeading, 2, true);
+        }else{
+            encoderDrive(.25, 3, forward, stayOnHeading, 2, true);
         }
         setIntakePower(0);
     }
@@ -614,7 +621,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
         gyroTurn(turningSpeed, 0);
-        encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
         gyroTurn(turningSpeed, 15);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
             getGoldPositionOneMineral();
@@ -628,11 +635,11 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         gyroTurn(turningSpeed, decideFirstSampleheading());
         if(goldPosition == 2){
-            encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
         }else if(goldPosition == 3){
-            encoderDrive(.5, 28, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 28, forward, stayOnHeading, 2.5, true);
         }else{
-            encoderDrive(.5, 36, forward, stayOnHeading, 2.5);
+            encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
         }
     }
     public void neutralSideSample(){
@@ -654,60 +661,60 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         gyroTurn(turningSpeed, decideSecondSampleheading());
         if(goldPosition == 2){
-            encoderDrive(.5, 12, forward, stayOnHeading, 5);
+            encoderDrive(.5, 12, forward, stayOnHeading, 5, true);
         }else{
-            encoderDrive(.5, 18, forward, stayOnHeading, 5);
+            encoderDrive(.5, 18, forward, stayOnHeading, 5, true);
         }
     }
 
     public void craterSideParkArmInCrater(){
-        encoderDrive(.75, 18, reverse, stayOnHeading, 3);
+        encoderDrive(.75, 18, reverse, stayOnHeading, 3, true);
         gyroTurn(turningSpeed, -115);
-        encoderDrive(.75, 12, reverse, stayOnHeading, 3);
+        encoderDrive(.75, 12, reverse, stayOnHeading, 3, true);
         gyroTurn(turningSpeed, -72);
-        encoderDrive(.75, 20, reverse, stayOnHeading, 3);
+        encoderDrive(.75, 20, reverse, stayOnHeading, 3, true);
         gyroTurn(turningSpeed, 0);
     }
 
     public void driveFromCraterAfterSampleToNearDepot(){
-        encoderDrive(.5, 46, forward, stayOnHeading, 2.5);
+        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
         gyroTurn(turningSpeed, -130);//turn to the left, facing the depot
-        encoderDrive(.5, 26, forward, stayOnHeading, 3);
+        encoderDrive(.5, 26, forward, stayOnHeading, 3, true);
     }
 
 
     public void depotSideDeployAndPark(){
         if(goldPosition == 1){
             gyroTurn(turningSpeed, 45);//turn towards the depot
-            encoderDrive(.5, 18, forward, stayOnHeading, 3);
+            encoderDrive(.5, 18, forward, stayOnHeading, 3, true);
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
             sleep(250);
-            encoderDrive(.75, 52, reverse, stayOnHeading, 5);
+            encoderDrive(.75, 52, reverse, stayOnHeading, 5, true);
         }else if(goldPosition == 2){
             deployTeamMarker();
             sleep(200);
-            encoderDrive(.5, 24, reverse, stayOnHeading, 2.5);
+            encoderDrive(.5, 24, reverse, stayOnHeading, 2.5, true);
             gyroTurn(turningSpeed, -90);//At this point we'll be facing the other alliances crater-ish
-            encoderDrive(.5, 18, forward, stayOnHeading, 2);
+            encoderDrive(.5, 18, forward, stayOnHeading, 2, true);
             gyroTurn(turningSpeed, -45);//face the near non-alliance wall
-            encoderDrive(.35, 36, forward, stayOnHeading, 4);//just hit the wall
-            encoderDrive(.2, 3, reverse, stayOnHeading, 2);//back away from the wall for turning clearance
+            encoderDrive(.35, 36, forward, stayOnHeading, 4, true);//just hit the wall
+            encoderDrive(.2, 3, reverse, stayOnHeading, 2, true);//back away from the wall for turning clearance
             gyroTurn(turningSpeed, 45);//turn towards the depot
-            encoderDrive(.5, 42, reverse, stayOnHeading, 3);
+            encoderDrive(.5, 42, reverse, stayOnHeading, 3, true);
         }else{
             gyroTurn(turningSpeed, -45);//face the near non-alliance wall
             encoderDriveSmooth(.5, 8, forward, stayOnHeading, 2);//just hit the wall
             encoderDriveSmooth(.35, 8, forward, 90, 2);//just hit the wall
-            encoderDrive(.5, 20, forward, 45, 2);//just hit the wall
-            encoderDrive(.35, 2, reverse, stayOnHeading, 4);//just hit the wall
+            encoderDrive(.5, 20, forward, 45, 2, true);//just hit the wall
+            encoderDrive(.35, 2, reverse, stayOnHeading, 4, true);//just hit the wall
             gyroTurn(turningSpeed, 46);
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
             sleep(250);
-            encoderDrive(.75, 52, reverse, stayOnHeading, 5);
+            encoderDrive(.75, 52, reverse, stayOnHeading, 5, true);
 
         }
         gyroTurn(turningSpeed, 50);
-        encoderDrive(.5, 12, reverse, stayOnHeading, 5);
+        encoderDrive(.5, 12, reverse, stayOnHeading, 5, true);
 
 
     }
@@ -719,9 +726,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
         // we get a little bit of extra time for cycles.
         gyroTurn(turningSpeed, -45);
-        encoderDrive(.425, 18, forward, stayOnHeading, 2);
+        encoderDrive(.425, 18, forward, stayOnHeading, 2, true);
         double thisHeading = getHeading();
-        encoderDrive(.35, 2.5, reverse, stayOnHeading, 1.5);
+        encoderDrive(.35, 2.5, reverse, stayOnHeading, 1.5, true);
         TeamMarker.setPosition(teamMarkerResting);
         double turningHeading = -thisHeading + 91;
         gyroTurn(turningSpeed, turningHeading);
@@ -731,14 +738,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
         // we get a little bit of extra time for cycles.
         gyroTurn(turningSpeed, 45);
-        encoderDrive(.425, 18, forward, stayOnHeading, 2);
+        encoderDrive(.425, 18, forward, stayOnHeading, 2, true);
         double thisHeading = getHeading();
-        encoderDrive(.35, 2, reverse, stayOnHeading, 1.5);
+        encoderDrive(.35, 2, reverse, stayOnHeading, 1.5, true);
         TeamMarker.setPosition(teamMarkerResting);
         double turningHeading = -thisHeading - 89;
         gyroTurn(turningSpeed, turningHeading);
     }
-    public void depotSideDoubleSample(){
+   /* public void depotSideDoubleSample(){
         goToDistance(.35, 100, FrontDistance,5,3);
         gyroTurn(turningSpeed, -30);
         encoderDrive(.75, 18, reverse, stayOnHeading, 3);
@@ -752,7 +759,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }else{
             encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
         }
-    }
+    }*/
     public void driveFromDepot(){}
 
     public int decideFirstSampleheading(){
