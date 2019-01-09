@@ -9,9 +9,9 @@ public class DepotBaseAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        scoringSystems.unlatch(18);
-        movement.depotSideSample();
-        movement.depotSideDeployAndPark();
+        unlatch(18);
+        depotSideSample();
+        depotSideDeployAndPark();
         endAuto(true);//Housekeeping, make sure slide is down, etc.
         //Potentially make a depot option that will go park in our crater side by going under the lander?
         //It'd be sweet}

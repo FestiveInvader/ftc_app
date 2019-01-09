@@ -10,15 +10,15 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
         //Remember to time auton so that we don't get in the way of the alliance partner until
         //we absolutely have to place the marker and park.
         super.runOpMode();
-        scoringSystems.unlatch(26);
-        movement.craterSideSample();
+        unlatch(26);
+        craterSideSample();
         gyroTurn(turningSpeed, -80 );//turn to the left, facing the depot-ish
         //This step should be a function driving to the depot to either wait to place the marker
         //Or to place it and sample the other team's sample
-        movement.driveFromCraterAfterSampleToNearDepot();
+        driveFromCraterAfterSampleToNearDepot();
         //sleep here for allowing partner to place
-        movement.deployTeamMarker();
-        movement.craterSideParkArmInCrater();
+        deployTeamMarker();
+        craterSideParkArmInCrater();
         endAuto(false);
     }
 }

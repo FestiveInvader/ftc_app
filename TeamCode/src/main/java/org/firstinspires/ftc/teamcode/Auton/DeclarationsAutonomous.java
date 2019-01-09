@@ -28,9 +28,12 @@ import java.util.List;
 public class DeclarationsAutonomous extends LinearOpMode {
     Hardware robot = new Hardware();
     public ElapsedTime runtime = new ElapsedTime();
+<<<<<<< HEAD
     ScoringSystems scoringSystems = new ScoringSystems();
     Movement movement = new Movement();
 
+=======
+>>>>>>> parent of 0a8abe1... Organized classes
 
     @Override
     public void runOpMode() {
@@ -109,9 +112,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double Heading = 0;
         boolean notAtTarget = true;
         if(armUp) {
-            scoringSystems.unextendHangSlide(true);
+            unextendHangSlide(true);
         }else{
-            scoringSystems.unextendHangSlide(false);
+            unextendHangSlide(false);
         }
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
@@ -145,7 +148,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
-        scoringSystems.unextendHangSlide(true);
+        unextendHangSlide(true);
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
         if (heading == 84.17){
@@ -206,7 +209,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             //else {drive normal}
             while(Math.abs(target) - Math.abs(LeftTop.getCurrentPosition()) > 25 && runtime.seconds() < 28.5 && (startTime + timeout > runtime.seconds())) {
                 double motorPos = Math.abs(LeftTop.getCurrentPosition());
-                scoringSystems.unextendHangSlide(true);
+                unextendHangSlide(true);
                 error = Math.abs(target) - Math.abs(motorPos);
                 if(Math.abs(motorPos) < Math.abs(accelTicks)){
                     //Accel
@@ -286,8 +289,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double minTurnSpeed = .35;//definitely play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
-        scoringSystems.unextendHangSlide(true);
-        scoringSystems.keepMineralArmUp();
+        unextendHangSlide(true);
+        keepMineralArmUp();
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
             leftSpeed  = 0;
@@ -303,7 +306,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             PosOrNeg = Range.clip((int)error, -1, 1);
             steer = getSteer(error, PCoeff);
             //the error/thispower was 175, changed to 100 for more responsiveness
-
+            
             leftSpeed  = Range.clip(speed + speedOffset + Math.abs(error/150) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
             rightSpeed = -leftSpeed;
 
@@ -395,7 +398,252 @@ public class DeclarationsAutonomous extends LinearOpMode {
     //End General movement functions
 
     //Start Rover Ruckus specific movement and logic functions
-  public int decideFirstSampleheading(){
+    public void unlatch(int inchesToUnlatch){
+
+        HangingSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        HangingSlide.setTargetPosition((int) ticksPerHangingInch * -inchesToUnlatch);
+        HangCamLeft.setPosition(hangCamLeftUnengagedPos);
+        HangCamRight.setPosition(hangCamRightUnengagedPos);
+        double timer = runtime.seconds() + 1;
+        while(timer > runtime.seconds() && opModeIsActive()){
+            keepMineralArmUp();
+        }
+        while(HangingSlide.isBusy()){
+            HangingSlide.setPower(1);
+            keepMineralArmUp();
+        }
+        HangingSlide.setPower(0);
+        ArmTop.setPower(0);
+        ArmBottom.setPower(0);
+    }
+
+    public void unextendHangSlide(boolean keepArmUp){
+        //this is made so it can be in a loop by itself, or in another loop.
+        HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        if(!hangSlidesDown) {
+            if (hangSlideIsExtended()) {
+                HangingSlide.setPower(.5);
+            } else {
+                HangingSlide.setPower(0);
+                hangSlidesDown = true;
+            }
+        }
+        if (keepArmUp) {
+            keepMineralArmUp();
+        }
+    }
+    public boolean hangSlideIsExtended(){
+        if(HangSlideLimit.getState() == false){
+            return false;
+        }else {
+            return true;
+        }
+    }
+    public void craterSideSample(){
+        /*//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+        gyroTurn(turningSpeed, 0);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2);
+        while(goldPosition == 0 && getHeading() < 45 &&opModeIsActive()){
+            pivot(.425, 1);
+            getGoldPositionTwoMineral();
+            unextendHangSlide();
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+        }
+        gyroTurn(turningSpeed, decideFirstSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.35, 12, forward, stayOnHeading, 5);
+        }else{
+            encoderDrive(.35, 24, forward, stayOnHeading, 5);
+        }
+*/
+        ElapsedTime elapsedTime = new ElapsedTime();
+//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+        gyroTurn(turningSpeed, 0);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
+        gyroTurn(turningSpeed, 15);
+        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            getGoldPositionOneMineral();
+            unextendHangSlide(true);
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+            //Position 1 is the leftmost mineral
+        }
+        gyroTurn(turningSpeed, decideFirstSampleheading());
+        putArmDown();
+        setIntakePower(.7);
+        sleep(250);
+        if(goldPosition == 2){
+            encoderDrive(.25, 3, forward, stayOnHeading, 2, false);
+        }else{
+            encoderDrive(.25, 6, forward, stayOnHeading, 2, false);
+        }
+        if(goldPosition == 2){
+            encoderDrive(.25, 4, forward, stayOnHeading, 2, true);
+        }else{
+            encoderDrive(.25, 5, forward, stayOnHeading, 2, true);
+        }
+        setIntakePower(0);
+    }
+    public void depotSideSample(){
+        ElapsedTime elapsedTime = new ElapsedTime();
+//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+        gyroTurn(turningSpeed, 0);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
+        gyroTurn(turningSpeed, 15);
+        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            getGoldPositionOneMineral();
+            unextendHangSlide(true);
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+            //Position 1 is the leftmost mineral
+        }
+        gyroTurn(turningSpeed, decideFirstSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
+        }else if(goldPosition == 3){
+            encoderDrive(.5, 28, forward, stayOnHeading, 2.5, true);
+        }else{
+            encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
+        }
+    }
+    public void neutralSideSample(){
+        double heading = getHeading();
+        ElapsedTime elapsedTime = new ElapsedTime();
+//should come immediately after unlatching
+        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
+        //for the team marker may have to be made.
+
+        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            getGoldPositionOneMineral();
+            unextendHangSlide(true);
+        }
+        if(goldPosition == 0){
+            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
+            // the team marker and park
+            goldPosition = 1;
+            //Position 1 is the leftmost mineral
+        }
+        gyroTurn(turningSpeed, decideSecondSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 12, forward, stayOnHeading, 5, true);
+        }else{
+            encoderDrive(.5, 18, forward, stayOnHeading, 5, true);
+        }
+    }
+
+    public void craterSideParkArmInCrater(){
+        encoderDrive(.75, 18, reverse, stayOnHeading, 3, true);
+        gyroTurn(turningSpeed, -115);
+        encoderDrive(.75, 12, reverse, stayOnHeading, 3, true);
+        gyroTurn(turningSpeed, -72);
+        encoderDrive(.75, 20, reverse, stayOnHeading, 3, true);
+        gyroTurn(turningSpeed, 0);
+    }
+
+    public void driveFromCraterAfterSampleToNearDepot(){
+        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
+        gyroTurn(turningSpeed, -130);//turn to the left, facing the depot
+        encoderDrive(.5, 32, forward, stayOnHeading, 3, true);
+    }
+
+
+    public void depotSideDeployAndPark(){
+        if(goldPosition == 1){
+            gyroTurn(turningSpeed, 45);//turn towards the depot
+            encoderDrive(.5, 18, forward, stayOnHeading, 3, true);
+            deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
+            sleep(250);
+            encoderDrive(.75, 52, reverse, stayOnHeading, 5, true);
+        }else if(goldPosition == 2){
+            deployTeamMarker();
+            sleep(200);
+            encoderDrive(.5, 24, reverse, stayOnHeading, 2.5, true);
+            gyroTurn(turningSpeed, -90);//At this point we'll be facing the other alliances crater-ish
+            encoderDrive(.5, 18, forward, stayOnHeading, 2, true);
+            gyroTurn(turningSpeed, -45);//face the near non-alliance wall
+            encoderDrive(.35, 36, forward, stayOnHeading, 4, true);//just hit the wall
+            encoderDrive(.2, 3, reverse, stayOnHeading, 2, true);//back away from the wall for turning clearance
+            gyroTurn(turningSpeed, 45);//turn towards the depot
+            encoderDrive(.5, 42, reverse, stayOnHeading, 3, true);
+        }else{
+            gyroTurn(turningSpeed, -45);//face the near non-alliance wall
+            encoderDriveSmooth(.5, 8, forward, stayOnHeading, 2);//just hit the wall
+            encoderDriveSmooth(.35, 8, forward, 90, 2);//just hit the wall
+            encoderDrive(.5, 20, forward, 45, 2, true);//just hit the wall
+            encoderDrive(.35, 2, reverse, stayOnHeading, 4, true);//just hit the wall
+            gyroTurn(turningSpeed, 46);
+            deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
+            sleep(250);
+            encoderDrive(.75, 52, reverse, stayOnHeading, 5, true);
+
+        }
+        gyroTurn(turningSpeed, 50);
+        encoderDrive(.5, 12, reverse, stayOnHeading, 5, true);
+
+
+    }
+    public void deployTeamMarker(){
+        TeamMarker.setPosition(teamMarkerDeploy);
+    }
+    public void depotTurnToFarCrater(){
+        //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
+        //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
+        // we get a little bit of extra time for cycles.
+        gyroTurn(turningSpeed, -45);
+        encoderDrive(.425, 18, forward, stayOnHeading, 2, true);
+        double thisHeading = getHeading();
+        encoderDrive(.35, 2.5, reverse, stayOnHeading, 1.5, true);
+        TeamMarker.setPosition(teamMarkerResting);
+        double turningHeading = -thisHeading + 91;
+        gyroTurn(turningSpeed, turningHeading);
+    }
+    public void depotTurnToCloseCrater(){
+        //This will drive to the other alliance's side's crater, to be out of the way of our partner's team marker.
+        //We should also have a version that goes to our side, if our alliance partner also scores in the lander (so that
+        // we get a little bit of extra time for cycles.
+        gyroTurn(turningSpeed, 45);
+        encoderDrive(.425, 18, forward, stayOnHeading, 2, true);
+        double thisHeading = getHeading();
+        encoderDrive(.35, 2, reverse, stayOnHeading, 1.5, true);
+        TeamMarker.setPosition(teamMarkerResting);
+        double turningHeading = -thisHeading - 89;
+        gyroTurn(turningSpeed, turningHeading);
+    }
+   /* public void depotSideDoubleSample(){
+        goToDistance(.35, 100, FrontDistance,5,3);
+        gyroTurn(turningSpeed, -30);
+        encoderDrive(.75, 18, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, 18);
+        encoderDrive(.75, 20, reverse, stayOnHeading, 3);
+        gyroTurn(turningSpeed, 90);
+        encoderDrive(.2, 4, reverse, stayOnHeading, 1.25);
+        gyroTurn(turningSpeed, decideSecondSampleheading());
+        if(goldPosition == 2){
+            encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
+        }else{
+            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+        }
+    }*/
+    public void driveFromDepot(){}
+
+    public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
@@ -555,6 +803,58 @@ public class DeclarationsAutonomous extends LinearOpMode {
     turn left
     */
 
+    public void putArmDown() {
+        while(opModeIsActive() && !armIsDown()) {
+            putMineralArmDown();
+        }
+        ArmTop.setPower(0);
+        ArmBottom.setPower(0);
+    }
+    public boolean armIsDown() {
+        if (potRotation() < 130) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    public void keepMineralArmUp(){
+        double armRotError = (Math.abs(potRotation())-Math.abs(armScoringRotation));
+
+        armPower = Range.clip(armRotError*armPVal, -1, 1);
+        ArmTop.setPower(armPower);
+        ArmBottom.setPower(armPower);
+    }
+    public void putMineralArmDown(){
+        double armRotError = (Math.abs(potRotation())-Math.abs(armDownRotation));
+
+        armPower = Range.clip(armRotError*armPVal, -.5, .5);
+        ArmTop.setPower(armPower);
+        ArmBottom.setPower(armPower);
+    }
+
+    public void setIntakePower(double power){
+        Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
+        IntakeLeft.setPower(power);
+        IntakeRight.setPower(power);
+    }
+    public double potRotation(){
+        double potRotation = ArmPot.getVoltage()/potMagicNumber;
+        return potRotation;
+    }
+    public void extendMineralArm(int inchesToExtend){
+        ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        ArmSlide.setTargetPosition((int) ticksToExtendMineralArmInch * inchesToExtend);
+        double timer = runtime.seconds() + 1;
+        while(timer > runtime.seconds() && opModeIsActive() && runtime.seconds() < 27){
+            keepMineralArmUp();
+        }
+        while(ArmSlide.isBusy() && opModeIsActive() &&  runtime.seconds() < 28){
+            keepMineralArmUp();
+            ArmSlide.setPower(1);
+        }
+        ArmSlide.setPower(0);
+    }
+
 
     public void endAuto(boolean endWithArmUp){
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -563,20 +863,20 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //telemetry for autonomous testing to see any factors that may have went wrong
         TeamMarker.setPosition(teamMarkerResting);
         if(endWithArmUp) {
-            while (opModeIsActive() && scoringSystems.hangSlideIsExtended()) {
-                scoringSystems.unextendHangSlide(true);
+            while (opModeIsActive() && hangSlideIsExtended()) {
+                unextendHangSlide(true);
             }
         }else{
             //ending with arm parked in crater
-            scoringSystems.extendMineralArm(14);
+            extendMineralArm(14);
             while (opModeIsActive()) {
-                if(scoringSystems.potRotation() < 130) {
-                    scoringSystems.putMineralArmDown();
+                if(potRotation() < 130) {
+                    putMineralArmDown();
                 }else{
                     ArmTop.setPower(0);
                     ArmBottom.setPower(0);                }
-                if(scoringSystems.hangSlideIsExtended()){
-                    scoringSystems.unextendHangSlide(false);
+                if(hangSlideIsExtended()){
+                    unextendHangSlide(false);
                 }else{
                     HangingSlide.setPower(0);
                 }
