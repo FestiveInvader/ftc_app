@@ -8,6 +8,6 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unextendHangSlide(true);
+        scoringSystems.unextendHangSlide(true);
     }
 }

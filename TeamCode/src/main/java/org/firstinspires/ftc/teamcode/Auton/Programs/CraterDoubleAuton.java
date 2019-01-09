@@ -8,8 +8,8 @@ public class CraterDoubleAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unlatch(18);
-        craterSideSample();
+        scoringSystems.unlatch(18);
+        movement.craterSideSample();
         //It would be best to figure out the crater base auton first since they'll be based off the
         //same paths, so it'd be safer to figure out the base 85 first.  Plus it's almost exactly the same movement
         endAuto(true);
