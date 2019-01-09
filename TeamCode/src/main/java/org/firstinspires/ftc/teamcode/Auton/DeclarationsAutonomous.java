@@ -26,23 +26,149 @@ import java.util.List;
 //@Author Eric Adams, Team 8417 'Lectric Legends
 
 public class DeclarationsAutonomous extends LinearOpMode {
-    Hardware robot = new Hardware();
-    public ElapsedTime runtime = new ElapsedTime();
-<<<<<<< HEAD
-    ScoringSystems scoringSystems = new ScoringSystems();
-    Movement movement = new Movement();
+    // This section declares hardware for the program, such as Motors, servos and sensors
+    // Declare Motors
+    public DcMotor LeftTop = null;
+    public DcMotor LeftBottom = null;
+    public DcMotor RightTop = null;
+    public DcMotor RightBottom = null;
+    public DcMotor HangingSlide = null;
+    public DcMotor ArmTop = null;
+    public DcMotor ArmBottom = null;
+    public DcMotor ArmSlide = null;
 
-=======
->>>>>>> parent of 0a8abe1... Organized classes
+    //public DcMotor ArmTop = null;
+    //public DcMotor ArmMid = null;
+    //public DcMotor ArmBottom = null;
+    //public DcMotor ArmSlide = null;
+
+
+    // Declare Servos
+    public CRServo IntakeLeft;
+    public CRServo IntakeRight;
+    public Servo HangCamLeft;
+    public Servo HangCamRight;
+    public Servo TeamMarker;
+    //public CRServo IntakeLeft;                  // Rev SRS
+    //public Servo PTOShifterLeft;                      // Rev SRS
+    //public Servo PTOShifterRight;
+    public DigitalChannel HangSlideLimit;
+    public AnalogInput ArmPot;
+    public BNO055IMU IMU;
+    public I2CXLv2 FrontDistance;
+
+    // Variables used  in functions
+    double CountsPerRev = 537.6;    // Andymark NeveRest 20 encoder counts per revolution
+    double GearRatio = 56/42;
+    double WheelDiameterInches = 3.0;     // For figuring circumference
+    double CountsPerInch = ((CountsPerRev / ((WheelDiameterInches * 3.1415))/GearRatio));
+
+    double rev40TicksPerRev = 1120;
+    double hangingPulleyDiameter = 1.1;
+    double hangingGearRatio = 60/40;
+    double ticksPerHangingRev = rev40TicksPerRev*hangingGearRatio;
+
+    double mineralArmSpoolDiameter = 1.78;
+    double ticksToExtendMineralArmInch = (rev40TicksPerRev/(mineralArmSpoolDiameter * 3.1415));
+
+    double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
+
+    double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
+    double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
+    double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
+    public double turningSpeed = .4;
+
+    double potMagicNumber = .01222;
+
+    boolean hangRatchetEngaged = true;
+    double hangCamLeftEngagedPos = 1;
+    double hangCamLeftUnengagedPos = 0;
+    double hangCamRightEngagedPos = 0;
+    double hangCamRightUnengagedPos = 1;
+
+    double armScoringRotation = 55;
+    double armDownRotation = 150;
+    double armPVal = .015;
+    double armPower;
+
+    public double teamMarkerDeploy = -.1;
+    public double teamMarkerResting = .3;
+
+    int goldPosition = 0;
+
+    public int forward = 1;
+    public int reverse = -1;
+    double programStartOrientation;
+    public double stayOnHeading = 84.17;
+
+    boolean hangSlidesDown = false;
+
+
+    private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
+    private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
+    private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
+    private static final String VUFORIA_KEY = "Ad2+xnL/////AAABmfD+XRaqfERPmvnHPZzg8b5xA35SCU5QWgaygrkAKRjWp+n" +
+            "searSU8Zriv5xsNvOm3cLWfUa7gXGF1h09LWDH6+0QrZ6WVl11ygsh5wTa8IyIZGaPqHG9FjsccPCzNtSPpLZj3vpS4K797weILM" +
+            "vElMa4xrSb/xSyn5zWwGEg5H931imaB8yFDkV7LIAxRJgfORqJcrOQ4WVjr6GxEVj2mjNkHNCKF57C1yyY8CYit5BcgDAkz4bosZ" +
+            "0jPpvwCks1+trrm5kP+NIj6y49SD+NZh85IUiEITB9ebw49pvA9M8fki18jLYDIexUZ7fnCFj8oBGGnc0CCispwE2ST7ddUDo4" +
+            "GmrSSkNLfUrDMjapPpK\n";
+    private VuforiaLocalizer vuforia;
+    private TFObjectDetector tfod;
+
+    public ElapsedTime runtime = new ElapsedTime();
 
     @Override
     public void runOpMode() {
         // This section gets the hardware maps
         telemetry.addData("Status", "Startiiiiiiii  ng Init");
         telemetry.update();
-        robot.init(hardwareMap);
+        // This section gets the hardware maps
+        LeftTop = hardwareMap.dcMotor.get("LeftTop");
+        LeftBottom = hardwareMap.dcMotor.get("LeftBottom");
+        RightTop = hardwareMap.dcMotor.get("RightTop");
+        RightBottom = hardwareMap.dcMotor.get("RightBottom");
+        HangingSlide = hardwareMap.dcMotor.get("HangingSlide");
+        ArmTop = hardwareMap.dcMotor.get("ArmTop");
+        ArmBottom = hardwareMap.dcMotor.get("ArmBottom");
+        ArmSlide = hardwareMap.dcMotor.get("ArmSlide");
 
+        IntakeLeft = hardwareMap.crservo.get("IntakeLeft");
+        IntakeRight = hardwareMap.crservo.get("IntakeRight");
+        HangCamLeft = hardwareMap.servo.get("HangCamLeft");
+        HangCamRight = hardwareMap.servo.get("HangCamRight");
+        TeamMarker = hardwareMap.servo.get("TeamMarker");
 
+        HangSlideLimit = hardwareMap.get(DigitalChannel.class, "HangSlideLimit");
+        HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
+
+        ArmPot = hardwareMap.analogInput.get("ArmPot");
+        FrontDistance = hardwareMap.get(I2CXLv2.class, "FrontDistance");
+
+        LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
+        LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+        HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
+        LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // Start Init IMU
+        BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
+        Bparameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        Bparameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        Bparameters.calibrationDataFile = "BNO055IMUCalibration.json";
+        Bparameters.loggingEnabled = true;
+        Bparameters.loggingTag = "IMU";
+        Bparameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+        IMU = hardwareMap.get(BNO055IMU.class, "IMU");
+        IMU.initialize(Bparameters);
+        // End Init IMU
         telemetry.addData("IMU Init'd", true);
         telemetry.update();
         //vuforiaHardware = new VuforiaHardware();
@@ -250,10 +376,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
             double error = distance - ThisLoopDistance;
             int Direction = (int) -Range.clip(error, -1, 1);
             if(ThisLoopDistance > 500 || ThisLoopDistance < 21){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/100), .25, targetSpeed), Direction);
+                //gyroDrive(startHeading, Range.clip(Math.abs(error/175), .2, targetSpeed), Direction);
                 //sensor val is bad, stop bot so it doesn't go too far
             }else if(ThisLoopDistance > distance + tolerance || ThisLoopDistance < distance - tolerance){
-                gyroDrive(startHeading, Range.clip(Math.abs(error/100), .25, targetSpeed), Direction);
+                gyroDrive(startHeading, Range.clip(Math.abs(error/175), .2, targetSpeed), Direction);
             }else{
                 stopDriveMotors();
                 foundTarget = true;
@@ -286,10 +412,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double SpeedError;
         double speedOffset = 0;
         double error = getError(angle);
-        double minTurnSpeed = .35;//definitely play with this val
+        double minTurnSpeed = .4;//definitely play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
-        unextendHangSlide(true);
+        //unextendHangSlide(true);
         keepMineralArmUp();
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
@@ -306,8 +432,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
             PosOrNeg = Range.clip((int)error, -1, 1);
             steer = getSteer(error, PCoeff);
             //the error/thispower was 175, changed to 100 for more responsiveness
-            
-            leftSpeed  = Range.clip(speed + speedOffset + Math.abs(error/150) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+
+            leftSpeed  = Range.clip(speed + speedOffset + Math.abs(error/175) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
             rightSpeed = -leftSpeed;
 
         }
@@ -320,7 +446,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         // Display debug info in telemetry.
         telemetry.addData("Target", "%5.2f", angle);
         telemetry.addData("Err/St", "%5.2f/%5.2f", error, steer);
-        telemetry.addData("Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
+        telemetry.addData("Speeds, Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
         telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
         return onTarget;
     }
@@ -416,7 +542,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmTop.setPower(0);
         ArmBottom.setPower(0);
     }
-
     public void unextendHangSlide(boolean keepArmUp){
         //this is made so it can be in a loop by itself, or in another loop.
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -440,6 +565,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             return true;
         }
     }
+
     public void craterSideSample(){
         /*//should come immediately after unlatching
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
@@ -549,11 +675,19 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
 
     public void craterSideParkArmInCrater(){
-        encoderDrive(.75, 18, reverse, stayOnHeading, 3, true);
-        gyroTurn(turningSpeed, -115);
-        encoderDrive(.75, 12, reverse, stayOnHeading, 3, true);
-        gyroTurn(turningSpeed, -72);
-        encoderDrive(.75, 20, reverse, stayOnHeading, 3, true);
+        double wantedDistanceFromWall = 80;
+        double distanceToDrive = 0;
+        double distanceToWall = FrontDistance.getDistance();
+        if(distanceToWall > 300){
+            distanceToWall = 40;
+        }
+        distanceToDrive = wantedDistanceFromWall - distanceToDrive;
+
+        //transition from cm to in
+        encoderDrive(.75, distanceToDrive/2.54, reverse, stayOnHeading, 3, true);
+        encoderDriveSmooth(.5, 6, reverse, 110, 2);
+        encoderDriveSmooth(.5, 8, reverse, 120, 2);
+        encoderDriveSmooth(.5, 8, reverse, 80, 2);
         gyroTurn(turningSpeed, 0);
     }
 
@@ -626,34 +760,34 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double turningHeading = -thisHeading - 89;
         gyroTurn(turningSpeed, turningHeading);
     }
-   /* public void depotSideDoubleSample(){
-        goToDistance(.35, 100, FrontDistance,5,3);
-        gyroTurn(turningSpeed, -30);
-        encoderDrive(.75, 18, reverse, stayOnHeading, 3);
-        gyroTurn(turningSpeed, 18);
-        encoderDrive(.75, 20, reverse, stayOnHeading, 3);
-        gyroTurn(turningSpeed, 90);
-        encoderDrive(.2, 4, reverse, stayOnHeading, 1.25);
-        gyroTurn(turningSpeed, decideSecondSampleheading());
-        if(goldPosition == 2){
-            encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
-        }else{
-            encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
-        }
-    }*/
+    /* public void depotSideDoubleSample(){
+         goToDistance(.35, 100, FrontDistance,5,3);
+         gyroTurn(turningSpeed, -30);
+         encoderDrive(.75, 18, reverse, stayOnHeading, 3);
+         gyroTurn(turningSpeed, 18);
+         encoderDrive(.75, 20, reverse, stayOnHeading, 3);
+         gyroTurn(turningSpeed, 90);
+         encoderDrive(.2, 4, reverse, stayOnHeading, 1.25);
+         gyroTurn(turningSpeed, decideSecondSampleheading());
+         if(goldPosition == 2){
+             encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
+         }else{
+             encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
+         }
+     }*/
     public void driveFromDepot(){}
 
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -23;
+            heading = -27;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 0;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 23;
+            heading = 27;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -788,8 +922,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
                     telemetry.addData("Silver2 X pos", silverMineral2X);
                     telemetry.update();
                     telemetry.update();
-                        //if one is sensed and it's gold, which side is it on
-                        //otherwise, if it's two and neither is gold, left
+                    //if one is sensed and it's gold, which side is it on
+                    //otherwise, if it's two and neither is gold, left
                 }
             }
         }
@@ -845,10 +979,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         ArmSlide.setTargetPosition((int) ticksToExtendMineralArmInch * inchesToExtend);
         double timer = runtime.seconds() + 1;
-        while(timer > runtime.seconds() && opModeIsActive() && runtime.seconds() < 27){
+        while(timer > runtime.seconds() && opModeIsActive()){
             keepMineralArmUp();
         }
-        while(ArmSlide.isBusy() && opModeIsActive() &&  runtime.seconds() < 28){
+        while(ArmSlide.isBusy() && opModeIsActive()){
             keepMineralArmUp();
             ArmSlide.setPower(1);
         }

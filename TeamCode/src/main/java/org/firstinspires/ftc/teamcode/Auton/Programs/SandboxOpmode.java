@@ -8,6 +8,9 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unextendHangSlide(true);
+        while(opModeIsActive()) {
+            telemetry.addData("distance", FrontDistance.getDistance());
+            telemetry.update();
+        }
     }
 }

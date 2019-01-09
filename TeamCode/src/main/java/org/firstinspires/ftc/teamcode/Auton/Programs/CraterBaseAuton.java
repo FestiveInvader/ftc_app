@@ -12,7 +12,7 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
         super.runOpMode();
         unlatch(26);
         craterSideSample();
-        gyroTurn(turningSpeed, -80 );//turn to the left, facing the depot-ish
+        gyroTurn(turningSpeed, -75 );//turn to the left, facing the depot-ish
         //This step should be a function driving to the depot to either wait to place the marker
         //Or to place it and sample the other team's sample
         driveFromCraterAfterSampleToNearDepot();
