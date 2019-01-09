@@ -26,151 +26,20 @@ import java.util.List;
 //@Author Eric Adams, Team 8417 'Lectric Legends
 
 public class DeclarationsAutonomous extends LinearOpMode {
-    // This section declares hardware for the program, such as Motors, servos and sensors
-    // Declare Motors
-    public DcMotor LeftTop = null;
-    public DcMotor LeftBottom = null;
-    public DcMotor RightTop = null;
-    public DcMotor RightBottom = null;
-    public DcMotor HangingSlide = null;
-    public DcMotor ArmTop = null;
-    public DcMotor ArmBottom = null;
-    public DcMotor ArmSlide = null;
-
-    //public DcMotor ArmTop = null;
-    //public DcMotor ArmMid = null;
-    //public DcMotor ArmBottom = null;
-    //public DcMotor ArmSlide = null;
-
-
-    // Declare Servos
-    public CRServo IntakeLeft;
-    public CRServo IntakeRight;
-    public Servo HangCamLeft;
-    public Servo HangCamRight;
-    public Servo TeamMarker;
-    //public CRServo IntakeLeft;                  // Rev SRS
-    //public Servo PTOShifterLeft;                      // Rev SRS
-    //public Servo PTOShifterRight;
-    public DigitalChannel HangSlideLimit;
-    public AnalogInput ArmPot;
-    public BNO055IMU IMU;
-    public I2CXLv2 FrontDistance;
-
-    // Variables used  in functions
-    double CountsPerRev = 537.6;    // Andymark NeveRest 20 encoder counts per revolution
-    double GearRatio = 56/42;
-    double WheelDiameterInches = 3.0;     // For figuring circumference
-    double CountsPerInch = ((CountsPerRev / ((WheelDiameterInches * 3.1415))/GearRatio));
-
-    double rev40TicksPerRev = 1120;
-    double hangingPulleyDiameter = 1.1;
-    double hangingGearRatio = 60/40;
-    double ticksPerHangingRev = rev40TicksPerRev*hangingGearRatio;
-
-    double mineralArmSpoolDiameter = 1.78;
-    double ticksToExtendMineralArmInch = (rev40TicksPerRev/(mineralArmSpoolDiameter * 3.1415));
-
-    double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
-
-    double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
-    double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
-    double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
-    public double turningSpeed = .325;
-
-    double potMagicNumber = .01222;
-
-    boolean hangRatchetEngaged = true;
-    double hangCamLeftEngagedPos = 1;
-    double hangCamLeftUnengagedPos = 0;
-    double hangCamRightEngagedPos = 0;
-    double hangCamRightUnengagedPos = 1;
-
-    double armScoringRotation = 55;
-    double armDownRotation = 150;
-    double armPVal = .015;
-    double armPower;
-
-    public double teamMarkerDeploy = -.1;
-    public double teamMarkerResting = .3;
-
-    int goldPosition = 0;
-
-    public int forward = 1;
-    public int reverse = -1;
-    double programStartOrientation;
-    public double stayOnHeading = 84.17;
-
-    boolean hangSlidesDown = false;
-
-
-    private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
-    private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
-    private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
-    private static final String VUFORIA_KEY = "Ad2+xnL/////AAABmfD+XRaqfERPmvnHPZzg8b5xA35SCU5QWgaygrkAKRjWp+n" +
-            "searSU8Zriv5xsNvOm3cLWfUa7gXGF1h09LWDH6+0QrZ6WVl11ygsh5wTa8IyIZGaPqHG9FjsccPCzNtSPpLZj3vpS4K797weILM" +
-            "vElMa4xrSb/xSyn5zWwGEg5H931imaB8yFDkV7LIAxRJgfORqJcrOQ4WVjr6GxEVj2mjNkHNCKF57C1yyY8CYit5BcgDAkz4bosZ" +
-            "0jPpvwCks1+trrm5kP+NIj6y49SD+NZh85IUiEITB9ebw49pvA9M8fki18jLYDIexUZ7fnCFj8oBGGnc0CCispwE2ST7ddUDo4" +
-            "GmrSSkNLfUrDMjapPpK\n";
-    private VuforiaLocalizer vuforia;
-    private TFObjectDetector tfod;
-
+    Hardware robot = new Hardware();
     public ElapsedTime runtime = new ElapsedTime();
-    public ScoringSystems scoringSystems = new ScoringSystems();
-    public Movement movement = new Movement();
+    ScoringSystems scoringSystems = new ScoringSystems();
+    Movement movement = new Movement();
+
 
     @Override
     public void runOpMode() {
         // This section gets the hardware maps
         telemetry.addData("Status", "Startiiiiiiii  ng Init");
         telemetry.update();
-        // This section gets the hardware maps
-        LeftTop = hardwareMap.dcMotor.get("LeftTop");
-        LeftBottom = hardwareMap.dcMotor.get("LeftBottom");
-        RightTop = hardwareMap.dcMotor.get("RightTop");
-        RightBottom = hardwareMap.dcMotor.get("RightBottom");
-        HangingSlide = hardwareMap.dcMotor.get("HangingSlide");
-        ArmTop = hardwareMap.dcMotor.get("ArmTop");
-        ArmBottom = hardwareMap.dcMotor.get("ArmBottom");
-        ArmSlide = hardwareMap.dcMotor.get("ArmSlide");
+        robot.init(hardwareMap);
 
-        IntakeLeft = hardwareMap.crservo.get("IntakeLeft");
-        IntakeRight = hardwareMap.crservo.get("IntakeRight");
-        HangCamLeft = hardwareMap.servo.get("HangCamLeft");
-        HangCamRight = hardwareMap.servo.get("HangCamRight");
-        TeamMarker = hardwareMap.servo.get("TeamMarker");
 
-        HangSlideLimit = hardwareMap.get(DigitalChannel.class, "HangSlideLimit");
-        HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
-
-        ArmPot = hardwareMap.analogInput.get("ArmPot");
-        FrontDistance = hardwareMap.get(I2CXLv2.class, "FrontDistance");
-
-        LeftTop.setDirection(DcMotorSimple.Direction.FORWARD);
-        LeftBottom.setDirection(DcMotorSimple.Direction.REVERSE);
-        RightTop.setDirection(DcMotorSimple.Direction.REVERSE);
-        RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
-        HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
-        LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        // Start Init IMU
-        BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
-        Bparameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        Bparameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        Bparameters.calibrationDataFile = "BNO055IMUCalibration.json";
-        Bparameters.loggingEnabled = true;
-        Bparameters.loggingTag = "IMU";
-        Bparameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        IMU = hardwareMap.get(BNO055IMU.class, "IMU");
-        IMU.initialize(Bparameters);
-        // End Init IMU
         telemetry.addData("IMU Init'd", true);
         telemetry.update();
         //vuforiaHardware = new VuforiaHardware();

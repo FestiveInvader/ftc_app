@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode.Auton;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
-public class ScoringSystems extends DeclarationsAutonomous{
+public class ScoringSystems  {
+    Hardware robot = new Hardware();
 
     public void putArmDown() {
         while(opModeIsActive() && !armIsDown()) {
