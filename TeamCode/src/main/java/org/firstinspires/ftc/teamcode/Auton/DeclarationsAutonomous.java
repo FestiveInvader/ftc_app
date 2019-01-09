@@ -68,12 +68,15 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangingGearRatio = 60/40;
     double ticksPerHangingRev = rev40TicksPerRev*hangingGearRatio;
 
+    double mineralArmSpoolDiameter = 1.78;
+    double ticksToExtendMineralArmInch = (rev40TicksPerRev/(mineralArmSpoolDiameter * 3.1415));
+
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
     double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
     double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
-    public double turningSpeed = .4;
+    public double turningSpeed = .325;
 
     double potMagicNumber = .01222;
 
@@ -407,6 +410,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double rightSpeed;
         double PosOrNeg = 1;
         double SpeedError;
+        double speedOffset = 0;
         double error = getError(angle);
         double minTurnSpeed = .35;//definitely play with this val
         double maxTurnSpeed = 1;
@@ -420,6 +424,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             onTarget = true;
         }
         else {
+
             // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
             // and adds the absolute value of error/150.  This allows for the robot to turn faster when farther
             // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
@@ -427,9 +432,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
             PosOrNeg = Range.clip((int)error, -1, 1);
             steer = getSteer(error, PCoeff);
             //the error/thispower was 175, changed to 100 for more responsiveness
-            leftSpeed  = Range.clip(speed + Math.abs(error/175) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
-
+            
+            leftSpeed  = Range.clip(speed + speedOffset + Math.abs(error/150) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
             rightSpeed = -leftSpeed;
+
         }
 
         // Set motor speeds.
@@ -441,6 +447,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         telemetry.addData("Target", "%5.2f", angle);
         telemetry.addData("Err/St", "%5.2f/%5.2f", error, steer);
         telemetry.addData("Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
+        telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
         return onTarget;
     }
     public double getError(double targetAngle) {
@@ -475,8 +482,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
             //if we're traveling backwards, we want to add the difference to the opposite as we
             // would if we traveled forward
             //We're getting the targetSpeed, and adding the (difference/PVal)
-            //The PVal is decided by dividing 15 (which is an arbitrary value) by the target speed.
-            // It was played around with, and decided on after testing.
+            //The PVal is decided by dividing 15 (which is an arbitrary value determined by robot)
+            //  by the target speed.  It was played around with, and decided on after testing.
             // By including a second method of tuning our speed changes, we can have a more,
             // or less, sensitive proportional drive depending not just on the error of our heading,
             // but depending on our target speed as well.  This means when we're traveling fast,
@@ -609,9 +616,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDrive(.25, 6, forward, stayOnHeading, 2, false);
         }
         if(goldPosition == 2){
-            encoderDrive(.25, 2, forward, stayOnHeading, 2, true);
+            encoderDrive(.25, 4, forward, stayOnHeading, 2, true);
         }else{
-            encoderDrive(.25, 3, forward, stayOnHeading, 2, true);
+            encoderDrive(.25, 5, forward, stayOnHeading, 2, true);
         }
         setIntakePower(0);
     }
@@ -679,7 +686,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void driveFromCraterAfterSampleToNearDepot(){
         encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
         gyroTurn(turningSpeed, -130);//turn to the left, facing the depot
-        encoderDrive(.5, 26, forward, stayOnHeading, 3, true);
+        encoderDrive(.5, 32, forward, stayOnHeading, 3, true);
     }
 
 
@@ -960,6 +967,20 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double potRotation = ArmPot.getVoltage()/potMagicNumber;
         return potRotation;
     }
+    public void extendMineralArm(int inchesToExtend){
+        ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        ArmSlide.setTargetPosition((int) ticksToExtendMineralArmInch * inchesToExtend);
+        double timer = runtime.seconds() + 1;
+        while(timer > runtime.seconds() && opModeIsActive() && runtime.seconds() < 27){
+            keepMineralArmUp();
+        }
+        while(ArmSlide.isBusy() && opModeIsActive() &&  runtime.seconds() < 28){
+            keepMineralArmUp();
+            ArmSlide.setPower(1);
+        }
+        ArmSlide.setPower(0);
+    }
+
 
     public void endAuto(boolean endWithArmUp){
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -972,6 +993,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 unextendHangSlide(true);
             }
         }else{
+            //ending with arm parked in crater
+            extendMineralArm(14);
             while (opModeIsActive()) {
                 if(potRotation() < 130) {
                     putMineralArmDown();
