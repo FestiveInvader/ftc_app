@@ -36,7 +36,6 @@ public class Teleop extends OpMode {
     public Servo TeamMarker;
     public Servo IntakeFlapLeft;
     public Servo IntakeFlapRight;
-
     public DigitalChannel HangSlideLimit;
     public AnalogInput ArmPot;
     double potMagicNumber = .01222;

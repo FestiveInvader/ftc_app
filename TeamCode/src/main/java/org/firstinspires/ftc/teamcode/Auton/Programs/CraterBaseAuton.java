@@ -3,7 +3,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
-@Autonomous(name="Crater side", group="Crater Side")
+@Autonomous(name="Crater|Regular", group="Crater Side")
 public class CraterBaseAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
@@ -12,13 +12,13 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
         super.runOpMode();
         unlatch(26);
         craterSideSample();
-        gyroTurn(turningSpeed, -75 );//turn to the left, facing the depot-ish
+        gyroTurn(turningSpeed, -72 );//turn to the left, facing the depot-ish
         //This step should be a function driving to the depot to either wait to place the marker
         //Or to place it and sample the other team's sample
-        driveFromCraterAfterSampleToNearDepot();
+        driveFromCraterAfterSampleToNearDepot(32);
         //sleep here for allowing partner to place
         deployTeamMarker();
-        craterSideParkArmInCrater();
-        endAuto(false);
+        craterSidePark();
+        endAuto(true);
     }
 }

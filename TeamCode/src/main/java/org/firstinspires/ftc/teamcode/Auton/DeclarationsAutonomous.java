@@ -49,6 +49,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public Servo HangCamLeft;
     public Servo HangCamRight;
     public Servo TeamMarker;
+    public Servo IntakeFlapLeft;
+
     //public CRServo IntakeLeft;                  // Rev SRS
     //public Servo PTOShifterLeft;                      // Rev SRS
     //public Servo PTOShifterRight;
@@ -57,6 +59,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public BNO055IMU IMU;
     public I2CXLv2 FrontDistance;
 
+
+
+    double intakeFlapLeftOpen = 0;
+    double intakeFlapLeftClosed = 1;
     // Variables used  in functions
     double CountsPerRev = 537.6;    // Andymark NeveRest 20 encoder counts per revolution
     double GearRatio = 56/42;
@@ -73,8 +79,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
-    double HEADING_THRESHOLD = 2;      // As tight as we can make it with an integer gyro
-    double P_TURN_COEFF = .2;     // Larger is more responsive, but also less stable
+    double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
+    double P_TURN_COEFF = .00225;     // Larger is more responsive, but also less stable .0035 is best so far
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
     public double turningSpeed = .4;
 
@@ -137,6 +143,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         HangCamLeft = hardwareMap.servo.get("HangCamLeft");
         HangCamRight = hardwareMap.servo.get("HangCamRight");
         TeamMarker = hardwareMap.servo.get("TeamMarker");
+        IntakeFlapLeft = hardwareMap.servo.get("IntakeFlapLeft");
+
 
         HangSlideLimit = hardwareMap.get(DigitalChannel.class, "HangSlideLimit");
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
@@ -392,14 +400,17 @@ public class DeclarationsAutonomous extends LinearOpMode {
         stopDriveMotors();
     }
     public void gyroTurn(double speed, double angle) {
+        double timeout = 1.5;
+        double time = runtime.seconds();
         // keep looping while we are still active, and not on heading.
         //uses onHeading to actually turn the robot/figure out error
-        while (opModeIsActive() && !onHeading(speed, -angle, P_TURN_COEFF)) {
-            // Update telemetry & Allow time for other processes to run.
-            telemetry.addData("Target Rot", angle);
-            telemetry.addData("Current Rot", getHeading());
-            telemetry.update();
-        }
+            while (opModeIsActive() && !onHeading(speed, -angle, P_TURN_COEFF)) {
+                // Update telemetry & Allow time for other processes to run.
+                telemetry.addData("Target Rot", angle);
+                telemetry.addData("Current Rot", getHeading());
+                telemetry.update();
+            }
+
     }
     boolean onHeading(double speed, double angle, double PCoeff) {
         //This function is a boolean, meaning it can be used in an if/while statement. For instance:
@@ -412,7 +423,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double SpeedError;
         double speedOffset = 0;
         double error = getError(angle);
-        double minTurnSpeed = .4;//definitely play with this val
+        double minTurnSpeed = .45;//definitely play with this val
         double maxTurnSpeed = 1;
         // determine turn power based on +/- error
         //unextendHangSlide(true);
@@ -430,10 +441,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
             // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
             // as more accurate turning when using the GyroSensor
             PosOrNeg = Range.clip((int)error, -1, 1);
-            steer = getSteer(error, PCoeff);
+            //steer = getSteer(error, PCoeff);
             //the error/thispower was 175, changed to 100 for more responsiveness
 
-            leftSpeed  = Range.clip(speed + speedOffset + Math.abs(error/175) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            leftSpeed  = Range.clip(.4 + Math.abs(error*PCoeff) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
             rightSpeed = -leftSpeed;
 
         }
@@ -445,7 +456,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         RightBottom.setPower(rightSpeed);
         // Display debug info in telemetry.
         telemetry.addData("Target", "%5.2f", angle);
-        telemetry.addData("Err/St", "%5.2f/%5.2f", error, steer);
         telemetry.addData("Speeds, Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
         telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
         return onTarget;
@@ -460,7 +470,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         return robotError;
     }
     public double getSteer(double error, double PCoeff) {
-        return Range.clip(error * (2*PCoeff), -1, 1);
+        return Range.clip(error * (PCoeff), -1, 1);
     }
     public void gyroDrive(double targetAngle, double targetSpeed, int direction) {
         //For use with other functions, but lets us use the gyro to keep the robot on a certain heading
@@ -675,26 +685,22 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
 
     public void craterSideParkArmInCrater(){
-        double wantedDistanceFromWall = 80;
-        double distanceToDrive = 0;
-        double distanceToWall = FrontDistance.getDistance();
-        if(distanceToWall > 300){
-            distanceToWall = 40;
-        }
-        distanceToDrive = wantedDistanceFromWall - distanceToDrive;
-
-        //transition from cm to in
-        encoderDrive(.75, distanceToDrive/2.54, reverse, stayOnHeading, 3, true);
-        encoderDriveSmooth(.5, 6, reverse, 110, 2);
-        encoderDriveSmooth(.5, 8, reverse, 120, 2);
-        encoderDriveSmooth(.5, 8, reverse, 80, 2);
+         //transition from cm to in
+        encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
+        encoderDriveSmooth(.75, 6, reverse, 110, 2);
+        encoderDriveSmooth(.75, 6, reverse, 120, 2);
+        encoderDriveSmooth(.75, 18, reverse, 80, 2);
         gyroTurn(turningSpeed, 0);
     }
+    public void craterSidePark(){
+         //transition from cm to in
+        encoderDrive(.75, 48, reverse, stayOnHeading, 3.5, true);
+    }
 
-    public void driveFromCraterAfterSampleToNearDepot(){
+    public void driveFromCraterAfterSampleToNearDepot(int inches){
         encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
-        gyroTurn(turningSpeed, -130);//turn to the left, facing the depot
-        encoderDrive(.5, 32, forward, stayOnHeading, 3, true);
+        gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
+        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
     }
 
 
@@ -760,21 +766,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double turningHeading = -thisHeading - 89;
         gyroTurn(turningSpeed, turningHeading);
     }
-    /* public void depotSideDoubleSample(){
-         goToDistance(.35, 100, FrontDistance,5,3);
-         gyroTurn(turningSpeed, -30);
-         encoderDrive(.75, 18, reverse, stayOnHeading, 3);
-         gyroTurn(turningSpeed, 18);
-         encoderDrive(.75, 20, reverse, stayOnHeading, 3);
-         gyroTurn(turningSpeed, 90);
-         encoderDrive(.2, 4, reverse, stayOnHeading, 1.25);
-         gyroTurn(turningSpeed, decideSecondSampleheading());
-         if(goldPosition == 2){
-             encoderDrive(.5, 16, forward, stayOnHeading, 2.5);
-         }else{
-             encoderDrive(.5, 24, forward, stayOnHeading, 2.5);
-         }
-     }*/
     public void driveFromDepot(){}
 
     public int decideFirstSampleheading(){
@@ -970,6 +961,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
         IntakeLeft.setPower(power);
         IntakeRight.setPower(power);
+        IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
     }
     public double potRotation(){
         double potRotation = ArmPot.getVoltage()/potMagicNumber;
