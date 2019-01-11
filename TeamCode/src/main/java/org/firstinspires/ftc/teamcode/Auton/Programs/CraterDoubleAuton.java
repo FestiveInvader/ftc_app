@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.Auton.Programs;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
 @Autonomous(name="Crater|End in near crater ", group="Crater Side")
+@Disabled
 public class CraterDoubleAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {

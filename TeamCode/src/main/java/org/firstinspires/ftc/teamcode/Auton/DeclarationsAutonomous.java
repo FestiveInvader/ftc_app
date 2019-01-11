@@ -80,7 +80,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
     double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
-    double P_TURN_COEFF = .00225;     // Larger is more responsive, but also less stable .0035 is best so far
+    double P_TURN_COEFF = .0025;     // Larger is more responsive, but also less stable .0035 is best so far
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
     public double turningSpeed = .4;
 
@@ -697,10 +697,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
         encoderDrive(.75, 48, reverse, stayOnHeading, 3.5, true);
     }
 
-    public void driveFromCraterAfterSampleToNearDepot(int inches){
+    public void driveFromCraterAfterSampleToNearDepot(){
         encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
-        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
+        encoderDrive(.5, 36, forward, stayOnHeading, 3, true);
     }
 
 

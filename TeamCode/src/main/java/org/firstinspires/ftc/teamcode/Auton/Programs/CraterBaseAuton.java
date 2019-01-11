@@ -15,7 +15,7 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
         gyroTurn(turningSpeed, -72 );//turn to the left, facing the depot-ish
         //This step should be a function driving to the depot to either wait to place the marker
         //Or to place it and sample the other team's sample
-        driveFromCraterAfterSampleToNearDepot(32);
+        driveFromCraterAfterSampleToNearDepot();
         //sleep here for allowing partner to place
         deployTeamMarker();
         craterSidePark();
