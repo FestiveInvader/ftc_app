@@ -770,7 +770,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, turningHeading);
     }
     public void driveFromDepot(){}
-
+//test
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
