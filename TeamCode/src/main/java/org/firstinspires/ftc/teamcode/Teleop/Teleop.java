@@ -205,7 +205,7 @@ public class Teleop extends OpMode {
             //Silver side, automatically open and spin intake at .15 speed
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightOpen);
-            intakePower = .25;
+            intakePower = .375;
         }else if(gamepad2.dpad_up) {
             //button to close the intake
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);

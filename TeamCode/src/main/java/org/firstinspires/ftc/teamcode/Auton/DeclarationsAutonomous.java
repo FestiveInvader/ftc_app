@@ -80,7 +80,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
     double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
-    double P_TURN_COEFF = .0025;     // Larger is more responsive, but also less stable .0035 is best so far
+    double P_TURN_COEFF = .0021
+            ;     // Larger is more responsive, but also less stable .0035 is best so far
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
     public double turningSpeed = .4;
 
@@ -619,16 +620,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
         putArmDown();
         setIntakePower(.7);
-        sleep(250);
+        sleep(1500);
         if(goldPosition == 2){
             encoderDrive(.25, 3, forward, stayOnHeading, 2, false);
         }else{
-            encoderDrive(.25, 6, forward, stayOnHeading, 2, false);
+            encoderDrive(.25, 7, forward, stayOnHeading, 2, false);
         }
         if(goldPosition == 2){
             encoderDrive(.25, 4, forward, stayOnHeading, 2, true);
         }else{
-            encoderDrive(.25, 5, forward, stayOnHeading, 2, true);
+            encoderDrive(.25, 2, forward, stayOnHeading, 2, true);
         }
         setIntakePower(0);
     }
@@ -694,13 +695,15 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     public void craterSidePark(){
          //transition from cm to in
-        encoderDrive(.75, 48, reverse, stayOnHeading, 3.5, true);
+        encoderDrive(.85, 58, reverse, 137
+                , 3.5, true);
     }
 
-    public void driveFromCraterAfterSampleToNearDepot(){
+    public void driveFromCraterAfterSampleToNearDepot(int inches, int delay){
         encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
-        encoderDrive(.5, 36, forward, stayOnHeading, 3, true);
+        sleep(delay*1000);
+        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
     }
 
 
@@ -735,7 +738,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
         }
         gyroTurn(turningSpeed, 50);
-        encoderDrive(.5, 12, reverse, stayOnHeading, 5, true);
+        encoderDrive(.5, 12, reverse, -52, 5, true);
 
 
     }
@@ -785,6 +788,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             heading = 0;
         }
         telemetry.update();
+        sleep(1500);
         return heading;
     }
 

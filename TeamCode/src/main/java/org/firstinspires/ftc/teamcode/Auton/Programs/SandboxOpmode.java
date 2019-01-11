@@ -3,14 +3,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
-@Autonomous(name="Sandbox ", group="Test")
+@Autonomous(name="Test intake servos ", group="Test")
 public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        while(opModeIsActive()) {
-            telemetry.addData("distance", FrontDistance.getDistance());
-            telemetry.update();
-        }
+        IntakeLeft.setPower(.7);
+        sleep(2000);
+        IntakeLeft.setPower(0);
+        sleep(1000);
+        IntakeRight.setPower(.7);
+        sleep(2000);
+        IntakeFlapLeft.setPosition(1);
     }
 }
