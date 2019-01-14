@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auton;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -165,7 +166,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Start Init IMU
-        /*BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
+        BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
         Bparameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         Bparameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         Bparameters.calibrationDataFile = "BNO055IMUCalibration.json";
@@ -173,7 +174,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         Bparameters.loggingTag = "IMU";
         Bparameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         IMU = hardwareMap.get(BNO055IMU.class, "IMU");
-        IMU.initialize(Bparameters);*/
+        IMU.initialize(Bparameters);
         // End Init IMU
 
         //vuforiaHardware = new VuforiaHardware();
@@ -397,7 +398,54 @@ public class DeclarationsAutonomous extends LinearOpMode {
         stopDriveMotors();
     }
     public void gyroTurn(double speed, double angle) {
-        double timeout = 1.5;
+        //This function is a boolean, meaning it can be used in an if/while statement. For instance:
+        //while(!onHeading){} would run all this code, until onHeading returns true
+        double   steer ;
+        boolean  onTarget = false ;
+        double leftSpeed;
+        double rightSpeed;
+        double PosOrNeg;
+        double minTurnSpeed = .275;//definitely play with this val
+        double maxTurnSpeed = .75;
+        double error = getError(angle);
+
+        // determine turn power based on +/- error
+        //unextendHangSlide(true);
+        while(Math.abs(error) >= .75){
+            error = getError(angle);
+            keepMineralArmUp();
+
+            if(IMU.getAngularVelocity().zRotationRate < .3){
+                //we're spinning too slow to turn now
+                minTurnSpeed += .01;
+            }
+            // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
+            // and adds the absolute value of error/150.  This allows for the robot to turn faster when farther
+            // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
+            // as more accurate turning when using the GyroSensor
+            PosOrNeg = Range.clip((int)error, -1, 1);
+            //steer = getSteer(error, PCoeff);
+
+            leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/250 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            rightSpeed = -leftSpeed;
+
+
+            // Set motor speeds.
+            LeftTop.setPower(leftSpeed);
+            LeftBottom.setPower(leftSpeed);
+            RightTop.setPower(rightSpeed);
+            RightBottom.setPower(rightSpeed);
+            // Display debug info in telemetry.
+            telemetry.addData("Target", "%5.2f", angle);
+            telemetry.addData("Speeds, Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
+            telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
+            telemetry.update();
+        }
+        steer = 0.0;
+        leftSpeed  = 0;
+        rightSpeed = 0;
+        onTarget = true;
+        /*double timeout = 1.5;
         double time = runtime.seconds();
         // keep looping while we are still active, and not on heading.
         //uses onHeading to actually turn the robot/figure out error
@@ -407,7 +455,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 telemetry.addData("Current Rot", getHeading());
                 telemetry.update();
             }
-
+            ArmTop.setPower(0);
+            ArmBottom.setPower(0);
+*/
     }
     boolean onHeading(double speed, double angle, double PCoeff) {
         //This function is a boolean, meaning it can be used in an if/while statement. For instance:
@@ -416,32 +466,32 @@ public class DeclarationsAutonomous extends LinearOpMode {
         boolean  onTarget = false ;
         double leftSpeed;
         double rightSpeed;
-        double PosOrNeg = 1;
-        double SpeedError;
-        double speedOffset = 0;
+        double PosOrNeg;
         double error = getError(angle);
-        double minTurnSpeed = .45;//definitely play with this val
-        double maxTurnSpeed = 1;
+        double minTurnSpeed = .275;//definitely play with this val
+        double maxTurnSpeed = .75;
         // determine turn power based on +/- error
         //unextendHangSlide(true);
         keepMineralArmUp();
-        if (Math.abs(error) <= HEADING_THRESHOLD) {
+        if (Math.abs(error) <= .25) {
             steer = 0.0;
             leftSpeed  = 0;
             rightSpeed = 0;
             onTarget = true;
         }
         else {
-
+            if(IMU.getAngularVelocity().zRotationRate < .4){
+                //we're spinning too slow to turn now
+                minTurnSpeed += .02;
+            }
             // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
             // and adds the absolute value of error/150.  This allows for the robot to turn faster when farther
             // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
             // as more accurate turning when using the GyroSensor
             PosOrNeg = Range.clip((int)error, -1, 1);
             //steer = getSteer(error, PCoeff);
-            //the error/thispower was 175, changed to 100 for more responsiveness
 
-            leftSpeed  = Range.clip(.4 + Math.abs(error*PCoeff) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/250 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
             rightSpeed = -leftSpeed;
 
         }
@@ -1018,3 +1068,61 @@ public class DeclarationsAutonomous extends LinearOpMode {
         telemetry.update();
     }
 }
+
+/*
+need to get angles/sec
+
+public void angleTurn(double target){
+        prevHeading = getHeading();
+        double heading;
+        while (notONTarget) {
+             heading = getHeading();
+            double deltaHeading = heading - prevHeading;
+            loopTime = elapsedTime.milliseconds - prevTime;
+            degSec = deltaHeading / loopTime;
+
+            prevHeading = heading;
+            prevTime = elapsedTime.milliseconds;
+
+        }
+
+
+ boolean onHeading(double speed, double angle, double PCoeff) {
+        double   steer ;
+        boolean  onTarget = false ;
+        double leftSpeed;
+        double rightSpeed;
+        double PosOrNeg = 1;
+        double SpeedError;
+        double speedOffset = 0;
+        double error = getError(angle);
+        double minTurnSpeed = .45;//definitely play with this val
+        double maxTurnSpeed = 1;
+        // determine turn power based on +/- error
+        //unextendHangSlide(true);
+        keepMineralArmUp();
+        if (Math.abs(error) <= HEADING_THRESHOLD) {
+            steer = 0.0;
+            leftSpeed  = 0;
+            rightSpeed = 0;
+            onTarget = true;
+        }
+        else {
+            PosOrNeg = Range.clip((int)error, -1, 1);
+            //steer = getSteer(error, PCoeff);
+            //the error/thispower was 175, changed to 100 for more responsiveness
+
+            leftSpeed  = Range.clip(.4 + Math.abs(error*PCoeff) , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            rightSpeed = -leftSpeed;
+
+        }
+
+        // Set motor speeds.
+        LeftTop.setPower(leftSpeed);
+        LeftBottom.setPower(leftSpeed);
+        RightTop.setPower(rightSpeed);
+        RightBottom.setPower(rightSpeed);
+        return onTarget;
+    }
+
+ */

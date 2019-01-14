@@ -10,12 +10,10 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        while(opModeIsActive()){
-            telemetry.addData("Got this far", 1);
-            telemetry.update();
-            sleep(3000);
-            getDegSec();
-            telemetry.update();
-        }
+        gyroTurn(turningSpeed, 180);
+        sleep(2000);
+        telemetry.addData("Done, heading", getHeading());
+        telemetry.update();
+        sleep(15000);
     }
 }
