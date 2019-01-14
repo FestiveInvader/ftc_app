@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.Auton;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -58,8 +57,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public AnalogInput ArmPot;
     public BNO055IMU IMU;
     public I2CXLv2 FrontDistance;
-
-
 
     double intakeFlapLeftOpen = 0;
     double intakeFlapLeftClosed = 1;
@@ -123,12 +120,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     private TFObjectDetector tfod;
 
     public ElapsedTime runtime = new ElapsedTime();
-    IMUTurning imuTurning;
-
-
     @Override
     public void runOpMode() {
-        imuTurning = new IMUTurning(20, this, IMU);
 
         // This section gets the hardware maps
         telemetry.addData("Status", "Startiiiiiiii  ng Init");
@@ -172,7 +165,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Start Init IMU
-
         /*BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
         Bparameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         Bparameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -992,7 +984,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
 
     public void getDegSec(){
-        imuTurning.run();
+        //imuTurning.run();
     }
 
     public void endAuto(boolean endWithArmUp){

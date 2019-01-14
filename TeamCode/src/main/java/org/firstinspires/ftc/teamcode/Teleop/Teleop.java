@@ -73,7 +73,6 @@ public class Teleop extends OpMode {
 
     double hangSlideDownPos = 0;
 
-
     public ElapsedTime runtime = new ElapsedTime();
 
     public void init() {
@@ -123,7 +122,8 @@ public class Teleop extends OpMode {
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
+
+    }
 
     @Override
     public void init_loop() {
@@ -141,10 +141,7 @@ public class Teleop extends OpMode {
 
     @Override
     public void loop() {
-
         potRotation = ArmPot.getVoltage()/potMagicNumber;
-
-
         if(gamepad2.right_bumper || gamepad1.dpad_up){
             //This section of code is a proportional system that rotates our mineral scoring system
             //into place.  This lets Samuel rotate the arm into place with just the push of a button
