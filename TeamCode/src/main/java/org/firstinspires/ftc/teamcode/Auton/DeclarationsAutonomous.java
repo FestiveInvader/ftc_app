@@ -123,9 +123,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
     private TFObjectDetector tfod;
 
     public ElapsedTime runtime = new ElapsedTime();
+    IMUTurning imuTurning;
+
 
     @Override
     public void runOpMode() {
+        imuTurning = new IMUTurning(20, this, IMU);
+
         // This section gets the hardware maps
         telemetry.addData("Status", "Startiiiiiiii  ng Init");
         telemetry.update();
@@ -168,7 +172,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Start Init IMU
-        BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
+
+        /*BNO055IMU.Parameters Bparameters = new BNO055IMU.Parameters();
         Bparameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         Bparameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         Bparameters.calibrationDataFile = "BNO055IMUCalibration.json";
@@ -176,10 +181,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         Bparameters.loggingTag = "IMU";
         Bparameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         IMU = hardwareMap.get(BNO055IMU.class, "IMU");
-        IMU.initialize(Bparameters);
+        IMU.initialize(Bparameters);*/
         // End Init IMU
-        telemetry.addData("IMU Init'd", true);
-        telemetry.update();
+
         //vuforiaHardware = new VuforiaHardware();
         //vuforiaHardware.Init(hardwareMap);
 
@@ -192,15 +196,15 @@ public class DeclarationsAutonomous extends LinearOpMode {
         } else {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
-
         while(!opModeIsActive()&&!isStopRequested()) {
-            telemetry.addData("IMU", getHeading());
+            //telemetry.addData("IMU", imuTurning.getHeading());
             telemetry.addData("FrontLeft Encoder", LeftTop.getCurrentPosition());
             telemetry.addData("If values are good, then run", 1);
             telemetry.addData("If I don't put the not !waitforstart or whatever here then it'll probably crash", 1);
             telemetry.update();
         }
         ElapsedTime timer = new ElapsedTime();
+
     }
     //Start TensorFlow functions (not movement based on TF)
     private void initVuforia() {
@@ -545,7 +549,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         while(timer > runtime.seconds() && opModeIsActive()){
             keepMineralArmUp();
         }
-        while(HangingSlide.isBusy()){
+        double newTimer = runtime.seconds() + 6;
+
+        while(HangingSlide.isBusy() && newTimer > runtime.seconds() && opModeIsActive()){
             HangingSlide.setPower(1);
             keepMineralArmUp();
         }
@@ -985,11 +991,15 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmSlide.setPower(0);
     }
 
+    public void getDegSec(){
+        imuTurning.run();
+    }
 
     public void endAuto(boolean endWithArmUp){
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         boolean putArmDown = true;
+        tfod.deactivate();
         //telemetry for autonomous testing to see any factors that may have went wrong
         TeamMarker.setPosition(teamMarkerResting);
         if(endWithArmUp) {
@@ -1012,7 +1022,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 }
             }
         }
-        tfod.deactivate();
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();
     }

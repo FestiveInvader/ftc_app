@@ -38,6 +38,7 @@ public class Teleop extends OpMode {
     public Servo IntakeFlapRight;
     public DigitalChannel HangSlideLimit;
     public AnalogInput ArmPot;
+
     double potMagicNumber = .01222;
     double potRotation;
 
@@ -66,7 +67,7 @@ public class Teleop extends OpMode {
     double intakeFlapRightClosed = 0;
 
     double armScoringRotation = 65;
-    double armPVal = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
+    double armkP = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
 
 
@@ -149,7 +150,7 @@ public class Teleop extends OpMode {
             //into place.  This lets Samuel rotate the arm into place with just the push of a button
             // instead of trying to rotate it into place manually.
             armRotError = (Math.abs(potRotation)-Math.abs(armScoringRotation));
-            armPower = Range.clip(armRotError*armPVal, -1, 1);
+            armPower = Range.clip(armRotError* armkP, -1, 1);//is a P controller
             //This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
             //this means that further away from the proper rotation (when the arm is down) the power
             //is greater than when it's close to the target.
