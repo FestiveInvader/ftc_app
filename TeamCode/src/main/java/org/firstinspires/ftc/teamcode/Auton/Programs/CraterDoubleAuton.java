@@ -1,19 +1,20 @@
 package org.firstinspires.ftc.teamcode.Auton.Programs;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
-@Autonomous(name="Crater|End in near crater ", group="Crater Side")
-@Disabled
+@Autonomous(name="Crater|Regular", group="Crater Side")
 public class CraterDoubleAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
+        //Remember to time auton so that we don't get in the way of the alliance partner until
+        //we absolutely have to place the marker and park.
         super.runOpMode();
-        unlatch(18);
+        unlatch(24);
         craterSideSample();
-        //It would be best to figure out the crater base auton first since they'll be based off the
-        //same paths, so it'd be safer to figure out the base 85 first.  Plus it's almost exactly the same movement
+        gyroTurn(turningSpeed, -80 );
+        driveFromCraterAfterSampleToNearDepot(36, 22);
+        craterDoubleSample();
         endAuto(true);
     }
 }

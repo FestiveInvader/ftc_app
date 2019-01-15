@@ -284,88 +284,54 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }
     }
- public void gyroTurn(double speed, double angle) {
-        double leftSpeed;
-        double rightSpeed;
-        double PosOrNeg;
-        double minTurnSpeed = .275;//definitely play with this val
-        double maxTurnSpeed = .65;
-        double error = getError(angle);
+    public void gyroTurn(double speed, double angle) {
+        double leftSpeed;//var to store left side of drivetrain speed
+        double rightSpeed;//var to store right side of drivetrain speed
+        double PosOrNeg; //Var for us to store which way we'll be turning.
+        double minTurnSpeed = .275;//Minimum speed (and constant added to error) we will be turning
+        double maxTurnSpeed = .65;//Maximum speed we'll be turning, we don't want to have a super high val
+        // for this otherwise we won't decelerate for our target in time
+        double error = getError(angle);//set to a lower number so that if we are starting with a 0 heading it'll
+        //still run through the loop, rather than
 
-        // determine turn power based on +/- error
-        //unextendHangSlide(true);
-        while(Math.abs(error) >= .75){
-            error = getError(angle);
-            keepMineralArmUp();
+        while(Math.abs(error) >= 1 && opModeIsActive()){
+            //While we aren't within a degree of our target and the opmode is running
+
+            error = getError(angle);//get the difference between our current heading and our desired heading.
+            unextendHangSlide(true);//make sure the hanging slide is going (or is) down
 
             if(IMU.getAngularVelocity().zRotationRate < .225 && minTurnSpeed < .5){
-                //we're spinning too slow to turn now
+                //get the angularVelocity (change in heading/time, basically) of the IMU, so we can see
+                //we're spinning too slow to turn, so up the minimum power so we can turn again
                 minTurnSpeed += .015;
             }else if(minTurnSpeed > .5){
-                //make sure we don't just miss the target and start turning super fast
+                //makes sure we don't have a runnaway minPower.
                 minTurnSpeed = .275;
             }
+
             // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
             // and adds the absolute value of error/200.  This allows for the robot to turn faster when farther
             // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
             // as more accurate turning when using the GyroSensor
             PosOrNeg = Range.clip((int)error, -1, 1);
-            //steer = getSteer(error, PCoeff);
-
+            //PosOrNeg lets us turn the correct direction, since otherwise we would have to always turn clockwise
             leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/200 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
-            rightSpeed = -leftSpeed;
+            rightSpeed = -leftSpeed;//right side goes negative left, so we actually turn.
 
-
-            // Set motor speeds.
+            // Set powers to motors
             LeftTop.setPower(leftSpeed);
             LeftBottom.setPower(leftSpeed);
             RightTop.setPower(rightSpeed);
             RightBottom.setPower(rightSpeed);
-            // Display debug info in telemetry.
+
+            //Show debug info in telemetry.
             telemetry.addData("Target", "%5.2f", angle);
             telemetry.addData("Speeds, Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
             telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
             telemetry.update();
         }
-        sleep(100);
-        if(getError(angle) > 2){
-            minTurnSpeed = .275;
-            while(Math.abs(error) >= .75){
-                error = getError(angle);
-                keepMineralArmUp();
 
-                if(IMU.getAngularVelocity().zRotationRate < .225 && minTurnSpeed < .5){
-                    //we're spinning too slow to turn now
-                    minTurnSpeed += .015;
-                }else if(minTurnSpeed > .5){
-                    //make sure we don't just miss the target and start turning super fast
-                    minTurnSpeed = .275;
-                }
-                // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
-                // and adds the absolute value of error/200.  This allows for the robot to turn faster when farther
-                // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
-                // as more accurate turning when using the GyroSensor
-                PosOrNeg = Range.clip((int)error, -1, 1);
-                //steer = getSteer(error, PCoeff);
-
-                leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/200 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
-                rightSpeed = -leftSpeed;
-
-
-                // Set motor speeds.
-                LeftTop.setPower(leftSpeed);
-                LeftBottom.setPower(leftSpeed);
-                RightTop.setPower(rightSpeed);
-                RightBottom.setPower(rightSpeed);
-                // Display debug info in telemetry.
-                telemetry.addData("Target", "%5.2f", angle);
-                telemetry.addData("Speeds, Left,Right.", "%5.2f:%5.2f", leftSpeed, rightSpeed);
-                telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
-                telemetry.update();
-            }
-        }
     }
-
     public double getError(double targetAngle) {
         //This function compares the current heading to the target heading, and returns the error
         double robotError;
@@ -439,82 +405,23 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     //End General movement functions
 
+
+
+
     //Start Rover Ruckus specific movement and logic functions
-    public void unlatch(int inchesToUnlatch){
 
-        HangingSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        HangingSlide.setTargetPosition((int) ticksPerHangingInch * -inchesToUnlatch);
-        HangCamLeft.setPosition(hangCamLeftUnengagedPos);
-        HangCamRight.setPosition(hangCamRightUnengagedPos);
-        double timer = runtime.seconds() + 1;
-        while(timer > runtime.seconds() && opModeIsActive()){
-            keepMineralArmUp();
-        }
-        double newTimer = runtime.seconds() + 6;
-
-        while(HangingSlide.isBusy() && newTimer > runtime.seconds() && opModeIsActive()){
-            HangingSlide.setPower(1);
-            keepMineralArmUp();
-        }
-        HangingSlide.setPower(0);
-        ArmTop.setPower(0);
-        ArmBottom.setPower(0);
-    }
-    public void unextendHangSlide(boolean keepArmUp){
-        //this is made so it can be in a loop by itself, or in another loop.
-        HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        if(!hangSlidesDown) {
-            if (hangSlideIsExtended()) {
-                HangingSlide.setPower(.5);
-            } else {
-                HangingSlide.setPower(0);
-                hangSlidesDown = true;
-            }
-        }
-        if (keepArmUp) {
-            keepMineralArmUp();
-        }
-    }
-    public boolean hangSlideIsExtended(){
-        if(HangSlideLimit.getState() == false){
-            return false;
-        }else {
-            return true;
-        }
-    }
-
+    //Start Crater side functions
     public void craterSideSample(){
-        /*//should come immediately after unlatching
-        //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
-        //for the team marker may have to be made.
-        gyroTurn(turningSpeed, 0);
-        encoderDrive(.35, 2, 1, stayOnHeading, 2);
-        while(goldPosition == 0 && getHeading() < 45 &&opModeIsActive()){
-            pivot(.425, 1);
-            getGoldPositionTwoMineral();
-            unextendHangSlide();
-        }
-        if(goldPosition == 0){
-            //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
-            // the team marker and park
-            goldPosition = 1;
-        }
-        gyroTurn(turningSpeed, decideFirstSampleheading());
-        if(goldPosition == 2){
-            encoderDrive(.35, 12, forward, stayOnHeading, 5);
-        }else{
-            encoderDrive(.35, 24, forward, stayOnHeading, 5);
-        }
-*/
         ElapsedTime elapsedTime = new ElapsedTime();
-//should come immediately after unlatching
+        //should come immediately after unlatching
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
-        gyroTurn(turningSpeed, 0);
+        //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
         encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
         gyroTurn(turningSpeed, 15);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+            //wait for 3 seconds to make sure TFOD has time to process the frames
+            //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
             getGoldPositionOneMineral();
             unextendHangSlide(true);
         }
@@ -540,6 +447,47 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         setIntakePower(0);
     }
+    public void craterSideParkArmInCrater(){
+         //transition from cm to in
+        encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
+        encoderDriveSmooth(.75, 6, reverse, 110, 2);
+        encoderDriveSmooth(.75, 6, reverse, 120, 2);
+        encoderDriveSmooth(.75, 18, reverse, 80, 2);
+        gyroTurn(turningSpeed, 0);
+    }
+    public void craterSidePark(){
+         //transition from cm to in
+        encoderDrive(.85, 58, reverse, 137, 3.5, true);
+    }
+    public void driveFromCraterAfterSampleToNearDepot(int inches, int delayUntil){
+        while(opModeIsActive() && runtime.seconds() < delayUntil){
+            telemetry.addData("Waiting to place team marker", 1);
+            telemetry.update();
+        }
+        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
+        gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
+        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
+    }
+    public void craterDoubleSample(){
+        encoderDrive(.5, 24, forward, stayOnHeading, 3, true);
+        gyroTurn(turningSpeed, decideSecondSampleheading());
+        if(goldPosition == 3){
+            deployTeamMarker();
+            encoderDriveSmooth(.65, 12, reverse, stayOnHeading, 2);
+            encoderDriveSmooth(.75, 18, reverse, 145, 3);
+            encoderDriveSmooth(.75, 36, reverse, 140, 3);
+        }else{
+            encoderDrive(.65, 18, reverse, stayOnHeading, 2, true);
+            encoderDrive(.75, 18, forward, stayOnHeading, 2, true);
+            deployTeamMarker();
+            gyroTurn(turningSpeed, -135);
+            craterSidePark();
+        }
+    }
+    //End Crater Side functions
+
+
+    //Start Depot Side Functions
     public void depotSideSample(){
         ElapsedTime elapsedTime = new ElapsedTime();
 //should come immediately after unlatching
@@ -567,29 +515,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
         }
     }
-
-    public void craterSideParkArmInCrater(){
-         //transition from cm to in
-        encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
-        encoderDriveSmooth(.75, 6, reverse, 110, 2);
-        encoderDriveSmooth(.75, 6, reverse, 120, 2);
-        encoderDriveSmooth(.75, 18, reverse, 80, 2);
-        gyroTurn(turningSpeed, 0);
-    }
-    public void craterSidePark(){
-         //transition from cm to in
-        encoderDrive(.85, 58, reverse, 137
-                , 3.5, true);
-    }
-
-    public void driveFromCraterAfterSampleToNearDepot(int inches, int delay){
-        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
-        gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
-        sleep(delay*1000);
-        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
-    }
-
-
     public void depotSideDeployAndPark(){
         if(goldPosition == 1){
             gyroTurn(turningSpeed, 45);//turn towards the depot
@@ -625,10 +550,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
 
     }
-    public void deployTeamMarker(){
-        TeamMarker.setPosition(teamMarkerDeploy);
-    }
-
+    //End Depot Side Functions
+    
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
@@ -649,18 +572,17 @@ public class DeclarationsAutonomous extends LinearOpMode {
         sleep(1500);
         return heading;
     }
-
     public double decideSecondSampleheading(){
         double heading = getHeading();
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = 60   ;
+            heading = -60   ;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
-            heading = 90;
+            heading = -90;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 120;
+            heading = -120;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -669,7 +591,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         telemetry.update();
         return heading;
     }
-
     public void getGoldPositionOneMineral(){
         if (goldPosition == 0 && opModeIsActive()) {
             if (tfod != null) {
@@ -739,6 +660,51 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
     }
 
+    public void unlatch(int inchesToUnlatch){
+        HangingSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        HangingSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        HangingSlide.setTargetPosition((int) ticksPerHangingInch * -inchesToUnlatch);
+        HangCamLeft.setPosition(hangCamLeftUnengagedPos);
+        HangCamRight.setPosition(hangCamRightUnengagedPos);
+        double timer = runtime.seconds() + 1;
+        while(timer > runtime.seconds() && opModeIsActive()){
+            keepMineralArmUp();
+        }
+        double newTimer = runtime.seconds() + 6;
+
+        while(HangingSlide.isBusy() && newTimer > runtime.seconds() && opModeIsActive()){
+            HangingSlide.setPower(1);
+            keepMineralArmUp();
+        }
+        HangingSlide.setPower(0);
+        ArmTop.setPower(0);
+        ArmBottom.setPower(0);
+    }
+    public void unextendHangSlide(boolean keepArmUp){
+        //this is made so it can be in a loop by itself, or in another loop.
+        HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        if(!hangSlidesDown) {
+            if (hangSlideIsExtended()) {
+                HangingSlide.setPower(.5);
+            } else {
+                HangingSlide.setPower(0);
+                hangSlidesDown = true;
+            }
+        }
+        if (keepArmUp) {
+            keepMineralArmUp();
+        }
+    }
+    public boolean hangSlideIsExtended(){
+        if(HangSlideLimit.getState() == false){
+            return false;
+        }else {
+            return true;
+        }
+    }
+
     public void putArmDown() {
         while(opModeIsActive() && !armIsDown()) {
             putMineralArmDown();
@@ -767,13 +733,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmTop.setPower(armPower);
         ArmBottom.setPower(armPower);
     }
-
-    public void setIntakePower(double power){
-        Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
-        IntakeLeft.setPower(power);
-        IntakeRight.setPower(power);
-        IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
-    }
     public double potRotation(){
         double potRotation = ArmPot.getVoltage()/potMagicNumber;
         return potRotation;
@@ -790,6 +749,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
             ArmSlide.setPower(1);
         }
         ArmSlide.setPower(0);
+    }
+
+    public void setIntakePower(double power){
+        Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
+        IntakeLeft.setPower(power);
+        IntakeRight.setPower(power);
+        IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+    }
+    public void deployTeamMarker(){
+        TeamMarker.setPosition(teamMarkerDeploy);
     }
 
     public void endAuto(boolean endWithArmUp){
