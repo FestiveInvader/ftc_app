@@ -10,9 +10,10 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        gyroTurn(turningSpeed, 90);
-        telemetry.addData("Done, heading", getHeading());
-        telemetry.update();
-        sleep(5000);
+        while(opModeIsActive()) {
+            telemetry.addData("Distance in IN", FrontDistance.getDistance());
+            telemetry.update();
+        }
+
     }
 }

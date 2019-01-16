@@ -219,11 +219,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
-        if(armUp) {
-            unextendHangSlide(true);
-        }else{
-            unextendHangSlide(false);
-        }
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
         if (heading == 84.17){
@@ -248,7 +243,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 //use gyrodrive to set power to the motors.  We have the Heading Var decied earlier,
                 // and speed and direction change base off of speed and direciton given by the user
                 gyroDrive(Heading, speed, direction);
+                if(armUp) {
+                    unextendHangSlide(true);
+                }else{
+                    unextendHangSlide(false);
+                }
             }
+            ArmTop.setPower(0);
+            ArmBottom.setPower(0);
             stopDriveMotors();
         }
     }
@@ -285,28 +287,32 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
     }
     public void gyroTurn(double speed, double angle) {
+        LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         double leftSpeed;//var to store left side of drivetrain speed
         double rightSpeed;//var to store right side of drivetrain speed
         double PosOrNeg; //Var for us to store which way we'll be turning.
-        double minTurnSpeed = .275;//Minimum speed (and constant added to error) we will be turning
-        double maxTurnSpeed = .65;//Maximum speed we'll be turning, we don't want to have a super high val
+        double minTurnSpeed = .3;//Minimum speed (and constant added to error) we will be turning
+        double maxTurnSpeed = .6;//Maximum speed we'll be turning, we don't want to have a super high val
         // for this otherwise we won't decelerate for our target in time
-        double error = getError(angle);//set to a lower number so that if we are starting with a 0 heading it'll
+        double error = getError(-angle);//set to a lower number so that if we are starting with a 0 heading it'll
         //still run through the loop, rather than
 
-        while(Math.abs(error) >= 1 && opModeIsActive()){
+        while(Math.abs(error) >= 1.25 && opModeIsActive()){
             //While we aren't within a degree of our target and the opmode is running
 
-            error = getError(angle);//get the difference between our current heading and our desired heading.
+            error = getError(-angle);//get the difference between our current heading and our desired heading.
             unextendHangSlide(true);//make sure the hanging slide is going (or is) down
 
-            if(IMU.getAngularVelocity().zRotationRate < .225 && minTurnSpeed < .5){
+            if(Math.abs(IMU.getAngularVelocity().zRotationRate) < .2 && minTurnSpeed < .5 ){
                 //get the angularVelocity (change in heading/time, basically) of the IMU, so we can see
                 //we're spinning too slow to turn, so up the minimum power so we can turn again
-                minTurnSpeed += .015;
-            }else if(minTurnSpeed > .5){
+                minTurnSpeed += .02;
+            }else if(minTurnSpeed > .5 || Math.abs(IMU.getAngularVelocity().zRotationRate) > .8){
                 //makes sure we don't have a runnaway minPower.
-                minTurnSpeed = .275;
+                minTurnSpeed = .3;
             }
 
             // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
@@ -315,7 +321,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             // as more accurate turning when using the GyroSensor
             PosOrNeg = Range.clip((int)error, -1, 1);
             //PosOrNeg lets us turn the correct direction, since otherwise we would have to always turn clockwise
-            leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/200 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/175 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
             rightSpeed = -leftSpeed;//right side goes negative left, so we actually turn.
 
             // Set powers to motors
@@ -330,6 +336,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
             telemetry.update();
         }
+        stopDriveMotors();
 
     }
     public double getError(double targetAngle) {
@@ -348,7 +355,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //For use with other functions, but lets us use the gyro to keep the robot on a certain heading
         // it's proportional, so if for instance, a robot hits us, this will account for that, and
         // correct the robot's heading.  It's not smart enough to oversteer to make sure we're on the exact
-        // same plain, but it's good enough for our use case since people can't cross over in RR1
+        // same plain, but it's good enough for our use case since people shouldn't hit us in auton
         LeftTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         LeftBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         RightTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -384,7 +391,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         LeftBottom.setPower(Range.clip(LeftPower, -1, 1));
         RightTop.setPower(Range.clip(RightPower, -1, 1));
         RightBottom.setPower(Range.clip(RightPower, -1, 1));
-    } //driveAdjust
+    }
     public double getHeading(){
         //returns the Z axis (which is what you want if the Rev module is flat), for ease of use
         Orientation angles = IMU.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
@@ -434,7 +441,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
         putArmDown();
         setIntakePower(.7);
-        sleep(1500);
+        sleep(500);
         if(goldPosition == 2){
             encoderDrive(.25, 3, forward, stayOnHeading, 2, false);
         }else{
@@ -447,6 +454,40 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         setIntakePower(0);
     }
+    public void craterDoubleSample(){
+        encoderDriveSmooth(.5, 8, forward, 160, 2);
+        encoderDriveSmooth(.65, 24, forward, 135, 1.5);
+        if(goldPosition == 3){
+            encoderDriveSmooth(.65, 12, reverse, 130, 2);
+            encoderDriveSmooth(.5, 8, reverse, 115, 1.5);
+            encoderDriveSmooth(.5, 12, forward, 125, 1.5);
+        }else{
+            encoderDrive(.65, 12, reverse, -decideSecondSampleheading(), 2, true);
+            encoderDrive(.75, 24, forward, 90, 2, true);
+        }
+        deployTeamMarker();
+        encoderDriveSmooth(.75, 12, reverse, 145, 3);
+        encoderDriveSmooth(.75, 48, reverse, 138, 3);
+
+    }
+
+    public void driveFromCraterAfterSampleToNearDepot(int inches, int delayUntil){
+        /*while(opModeIsActive() && runtime.seconds() < delayUntil){
+            telemetry.addData("Waiting to place team marker", 1);
+            telemetry.update();
+
+            make this sleep(runtime - wanted time ) or something
+        }*/
+        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
+        gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
+        double currentDistance = 200;
+        /*while(opModeIsActive() && currentDistance > 110){
+            currentDistance = FrontDistance.getDistance();
+            gyroDrive(130, .4, forward);
+        }*/
+        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
+    }
+
     public void craterSideParkArmInCrater(){
          //transition from cm to in
         encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
@@ -458,31 +499,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void craterSidePark(){
          //transition from cm to in
         encoderDrive(.85, 58, reverse, 137, 3.5, true);
-    }
-    public void driveFromCraterAfterSampleToNearDepot(int inches, int delayUntil){
-        while(opModeIsActive() && runtime.seconds() < delayUntil){
-            telemetry.addData("Waiting to place team marker", 1);
-            telemetry.update();
-        }
-        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
-        gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
-        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
-    }
-    public void craterDoubleSample(){
-        encoderDrive(.5, 24, forward, stayOnHeading, 3, true);
-        gyroTurn(turningSpeed, decideSecondSampleheading());
-        if(goldPosition == 3){
-            deployTeamMarker();
-            encoderDriveSmooth(.65, 12, reverse, stayOnHeading, 2);
-            encoderDriveSmooth(.75, 18, reverse, 145, 3);
-            encoderDriveSmooth(.75, 36, reverse, 140, 3);
-        }else{
-            encoderDrive(.65, 18, reverse, stayOnHeading, 2, true);
-            encoderDrive(.75, 18, forward, stayOnHeading, 2, true);
-            deployTeamMarker();
-            gyroTurn(turningSpeed, -135);
-            craterSidePark();
-        }
     }
     //End Crater Side functions
 
@@ -551,7 +567,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     }
     //End Depot Side Functions
-    
+
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
@@ -569,20 +585,19 @@ public class DeclarationsAutonomous extends LinearOpMode {
             heading = 0;
         }
         telemetry.update();
-        sleep(1500);
         return heading;
     }
     public double decideSecondSampleheading(){
         double heading = getHeading();
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -60   ;
+            heading = -70   ;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
-            heading = -90;
+            heading = -100;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = -120;
+            heading = -130;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -591,6 +606,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         telemetry.update();
         return heading;
     }
+
     public void getGoldPositionOneMineral(){
         if (goldPosition == 0 && opModeIsActive()) {
             if (tfod != null) {

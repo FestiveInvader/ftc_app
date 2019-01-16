@@ -10,7 +10,7 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
         //Remember to time auton so that we don't get in the way of the alliance partner until
         //we absolutely have to place the marker and park.
         super.runOpMode();
-        unlatch(24);
+        unlatch(18);
         telemetry.addData("Here", 1);
         telemetry.update();
         craterSideSample();
@@ -23,7 +23,7 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
 
         telemetry.addData("Here", 3);
         telemetry.update();
-        driveFromCraterAfterSampleToNearDepot(36, 22);
+        driveFromCraterAfterSampleToNearDepot(36, 24);
 
         telemetry.addData("Here", 4);
         telemetry.update();
