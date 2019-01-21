@@ -11,7 +11,7 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     public void runOpMode() {
         super.runOpMode();
         while(opModeIsActive()) {
-            telemetry.addData("Distance in IN", FrontDistance.getDistance());
+            telemetry.addData("Arm Rot", potRotation());
             telemetry.update();
         }
 

@@ -66,7 +66,7 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 65;
+    double armScoringRotation = 30;
     double armkP = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
 
@@ -179,16 +179,10 @@ public class Teleop extends OpMode {
             }
         }
 
-        if(gamepad2.left_trigger > .1){
-            //This is a slow mode for the
-            armPower = armPower * .35;
-        }
 
 
-        if(gamepad2.right_trigger > .1) {
-            //Slow intake mode for Samuel
-            intakePower = Range.clip(gamepad2.right_trigger/3,-.7,.7);
-        }else if(gamepad1.right_bumper) {
+
+        if(gamepad1.right_bumper) {
             //Let Isaac set full power to the intake
             intakePower = .7;
         }else if(gamepad1.left_bumper || gamepad2.start) {
@@ -234,29 +228,26 @@ public class Teleop extends OpMode {
         }*/
 
 
-        if(gamepad2.left_bumper){
-            if (HangSlideLimit.getState() == false) {
-                //hanging slide is down, sensed by the limit switch
-                hangingMotorPower = Range.clip(gamepad2.right_stick_y, -1, 0);
-            } else {
-                hangingMotorPower = gamepad2.right_stick_y;
+
+        if (HangSlideLimit.getState() == false) {
+            //hanging slide is down
+            hangingMotorPower = Range.clip(-gamepad1.left_trigger + -gamepad2.right_trigger, -1, 0);
+        } else {
+            if(gamepad1.right_trigger > .1){
+            //Allow control on gamepad 1 to hang, which should help increase speed of hanging
+                hangingMotorPower = gamepad1.right_trigger;//goes down
+            }else if(gamepad1.left_trigger > .1){
+                hangingMotorPower = -gamepad1.left_trigger;//goes up
+            }else if(gamepad2.right_trigger > .1){
+                hangingMotorPower = -gamepad2.right_trigger;//goes up
+            }else if(gamepad2.left_trigger > .1){
+                hangingMotorPower = gamepad2.left_trigger;//goes down
+            }else{
+                hangingMotorPower = 0;
             }
-        }else {
-            if (HangSlideLimit.getState() == false) {
-                //hanging slide is down
-                hangingMotorPower = Range.clip(-gamepad1.left_trigger, -1, 0);
-            } else {
-                if(gamepad1.right_trigger > .1){
-                //Allow control on gamepad 1 to hang, which should help increase speed of hanging
-                    hangingMotorPower = gamepad1.right_trigger;
-                }else if(gamepad1.left_trigger > .1){
-                    hangingMotorPower = -gamepad1.left_trigger;
-                }else{
-                    hangingMotorPower = 0;
-                }
-            }
-            armSlidePower = -gamepad2.right_stick_y;
         }
+        armSlidePower = -gamepad2.right_stick_y;
+
 
         if(gamepad1.a){
             //If either of the a buttons are pressed, engage the ratchet system

@@ -275,4 +275,18 @@ public void depotTurnToFarCrater(){
             }
             ArmTop.setPower(0);
             ArmBottom.setPower(0);
+
+
+                public void pivot(double rotationSpeed, int direction){
+        LeftTop.setPower(rotationSpeed*-direction);
+        LeftBottom.setPower(rotationSpeed*-direction);
+        RightTop.setPower(rotationSpeed*direction);
+        RightBottom.setPower(rotationSpeed*direction);
+    }
+
+    public double getSteer(double error, double PCoeff) {
+        return Range.clip(error * (PCoeff), -1, 1);
+    }
+
+
 */

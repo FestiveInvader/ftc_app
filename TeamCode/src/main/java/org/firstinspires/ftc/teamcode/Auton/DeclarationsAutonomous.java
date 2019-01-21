@@ -82,8 +82,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 55;
-    double armDownRotation = 150;
+    double armScoringRotation = 30; //Absolutely closed is 11
+    double armDownRotation = 113;
     double armPVal = .015;
     double armPower;
 
@@ -190,6 +190,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime();
 
     }
+
+
     //Start TensorFlow functions (not movement based on TF)
     private void initVuforia() {
         /*
@@ -348,9 +350,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         while (robotError <= -180) robotError += 360;
         return robotError;
     }
-    public double getSteer(double error, double PCoeff) {
-        return Range.clip(error * (PCoeff), -1, 1);
-    }
     public void gyroDrive(double targetAngle, double targetSpeed, int direction) {
         //For use with other functions, but lets us use the gyro to keep the robot on a certain heading
         // it's proportional, so if for instance, a robot hits us, this will account for that, and
@@ -404,19 +403,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
         RightTop.setPower(0);
         RightBottom.setPower(0);
     }
-    public void pivot(double rotationSpeed, int direction){
-        LeftTop.setPower(rotationSpeed*-direction);
-        LeftBottom.setPower(rotationSpeed*-direction);
-        RightTop.setPower(rotationSpeed*direction);
-        RightBottom.setPower(rotationSpeed*direction);
-    }
     //End General movement functions
-
-
 
 
     //Start Rover Ruckus specific movement and logic functions
 
+    
     //Start Crater side functions
     public void craterSideSample(){
         ElapsedTime elapsedTime = new ElapsedTime();
@@ -476,7 +468,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.addData("Waiting to place team marker", 1);
             telemetry.update();
 
-            make this sleep(runtime - wanted time ) or something
+            //make this sleep(runtime - wanted time ) or something
         }*/
         encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
@@ -487,21 +479,17 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }*/
         encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
     }
-
+    public void craterSidePark(){
+        encoderDrive(.85, 48, reverse, 137, 3.5, true);
+    }
     public void craterSideParkArmInCrater(){
-         //transition from cm to in
         encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
         encoderDriveSmooth(.75, 6, reverse, 110, 2);
         encoderDriveSmooth(.75, 6, reverse, 120, 2);
         encoderDriveSmooth(.75, 18, reverse, 80, 2);
         gyroTurn(turningSpeed, 0);
     }
-    public void craterSidePark(){
-         //transition from cm to in
-        encoderDrive(.85, 58, reverse, 137, 3.5, true);
-    }
     //End Crater Side functions
-
 
     //Start Depot Side Functions
     public void depotSideSample(){
@@ -568,6 +556,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     //End Depot Side Functions
 
+    //Start deciding mineral position
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
@@ -606,7 +595,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         telemetry.update();
         return heading;
     }
-
     public void getGoldPositionOneMineral(){
         if (goldPosition == 0 && opModeIsActive()) {
             if (tfod != null) {
@@ -675,7 +663,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }
     }
+    //End deciding mineral position
 
+    //Start hanging system code
     public void unlatch(int inchesToUnlatch){
         HangingSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -720,7 +710,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
             return true;
         }
     }
+    //End hanging system code
 
+    //Start mineral system code
     public void putArmDown() {
         while(opModeIsActive() && !armIsDown()) {
             putMineralArmDown();
@@ -729,7 +721,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmBottom.setPower(0);
     }
     public boolean armIsDown() {
-        if (potRotation() < 130) {
+        if (potRotation() < armDownRotation - 20) {
             return false;
         } else {
             return true;
@@ -766,17 +758,21 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         ArmSlide.setPower(0);
     }
-
     public void setIntakePower(double power){
         Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
         IntakeLeft.setPower(power);
         IntakeRight.setPower(power);
         IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
     }
+    //End mineral system code
+
+    //Start miscellaneous system code
     public void deployTeamMarker(){
         TeamMarker.setPosition(teamMarkerDeploy);
     }
+    //End miscellaneous system code
 
+    //End of autonomous housekeeping
     public void endAuto(boolean endWithArmUp){
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
