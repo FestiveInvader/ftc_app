@@ -31,8 +31,8 @@ public class Teleop extends OpMode {
     // Declare Servos
     public CRServo IntakeLeft;
     public CRServo IntakeRight;
-    public Servo HangCamLeft;
-    public Servo HangCamRight;
+    public Servo HangCamLeft = null;
+    public Servo HangCamRight = null;
     public Servo TeamMarker;
     public Servo IntakeFlapLeft;
     public Servo IntakeFlapRight;
@@ -66,7 +66,7 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 30;
+    double armScoringRotation = 40;
     double armkP = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
 
@@ -155,22 +155,22 @@ public class Teleop extends OpMode {
             //All these loops do is keep our arm from breaking itself.  We use the Rev potentiometer
             // to get the rotation of the arm, and have done testing with these limits to make sure
             // they are in the right place.
-            if (potRotation <= 35) {
+            if (potRotation <= 11) {
                 //if the arm is too far back, move it up slowly
                 armPower = Range.clip(-gamepad2.left_stick_y - .2, -1, 0);
-            } else if (potRotation < 40) {
+            } else if (potRotation < 15) {
                 //if it's at the limits, allow no more movement backward
                 armPower = Range.clip(-gamepad2.left_stick_y, -1, 0);
-            } else if (potRotation >= 40 && potRotation <= 50) {
+            } else if (potRotation >= 15 && potRotation <= 20) {
                 //if it's close to the limits, let it move slowly
                 armPower = Range.clip(-gamepad2.left_stick_y, -1, .25);
-            } else if (potRotation >= 175 && potRotation <= 195) {
+            } else if (potRotation >= 150 && potRotation <= 170) {
                 //if it's close to the limits, let it move slowly
                 armPower = Range.clip(-gamepad2.left_stick_y, -.35, 1);
-            } else if (potRotation >= 195 && potRotation <= 200) {
+            } else if (potRotation >= 170 && potRotation <= 175) {
                 //if it's at the down limits, allow no more forward rotation
                 armPower = Range.clip(-gamepad2.left_stick_y, 0, 1);
-            } else if (potRotation >= 200) {
+            } else if (potRotation >= 175) {
                 //if it's past the limits, move it back into it's limits slowly
                 armPower = Range.clip(-gamepad2.left_stick_y + .2, 0, 1);
             } else {

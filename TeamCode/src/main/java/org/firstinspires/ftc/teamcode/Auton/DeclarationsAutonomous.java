@@ -408,7 +408,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     //Start Rover Ruckus specific movement and logic functions
 
-    
+
     //Start Crater side functions
     public void craterSideSample(){
         ElapsedTime elapsedTime = new ElapsedTime();
