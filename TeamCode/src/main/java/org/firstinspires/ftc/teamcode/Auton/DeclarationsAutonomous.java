@@ -713,6 +713,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
     //End hanging system code
 
     //Start mineral system code
+    public void rotateArm(int desiredRot) {
+        while(opModeIsActive() && !armIsDown()) {
+            double armRotError = (Math.abs(potRotation())-Math.abs(desiredRot));
+            armPower = Range.clip(armRotError*armPVal, -.5, .5);
+            ArmTop.setPower(armPower);
+            ArmBottom.setPower(armPower);
+        }
+        ArmTop.setPower(0);
+        ArmBottom.setPower(0);
+    }
     public void putArmDown() {
         while(opModeIsActive() && !armIsDown()) {
             putMineralArmDown();
