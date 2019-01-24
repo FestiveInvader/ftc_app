@@ -142,11 +142,13 @@ public class Teleop3 extends OpMode {
         potRotation = ArmPot.getVoltage()/potMagicNumber;
         ArmTop.setPower(gamepad1.left_stick_y);
         ArmBottom.setPower(gamepad1.right_stick_y);
-
+        doTelemetry();
     }
     public void doTelemetry(){
         telemetry.addData("Pot Voltage", ArmPot.getVoltage());
         telemetry.addData("Pot Position", (ArmPot.getVoltage()/potMagicNumber));
+        telemetry.addData("left Joy,", gamepad1.left_stick_y);
+        telemetry.addData("Right Joy,", gamepad1.right_stick_y);
         telemetry.addData("left power,", leftPower);
         telemetry.addData("right power,", rightPower);
         telemetry.addData("hanging power,", hangingMotorPower);

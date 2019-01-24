@@ -57,7 +57,7 @@ import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name="Default: Iterative OpMode", group="Iterative OpMode")
 //@Disabled
-public class Teleop2 extends OpMode
+public class Teleop12588 extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime _runtime = new ElapsedTime();
@@ -358,14 +358,7 @@ public class Teleop2 extends OpMode
         // Show the elapsed game time and wheel power.
 //        telemetry.addData("Status", "Run Time: " + runtime.toString());
 //        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-        telemetry.addData("Left Joystick position", gamepad2.left_stick_y);
-        telemetry.addData("Right Joystick position", gamepad2.right_stick_y);
-        telemetry.addData("CS power", _continuousServo.getPower());
-        telemetry.addData("Wrist Servo Power", _wristServo.getPower());
-        telemetry.update();
-        //This will just be overridden by the if else loop's setting their power, so it's unneccessary
-        _continuousServo.setPower(-.946);
-        _wristServo.setPower(_continuousServo.getPower());
+
 
     }
 
