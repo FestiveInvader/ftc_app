@@ -3,7 +3,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
-@Autonomous(name="Crater|Double sample", group="Crater Side")
+@Autonomous(name="CRATER | DOUBLE SAMPLE", group="Crater Side")
 public class CraterDoubleAuton extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {

@@ -137,6 +137,8 @@ public class Teleop extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+        HangCamLeft.setPosition(hangCamLeftUnengagedPos);
+        HangCamRight.setPosition(hangCamRightUnengagedPos);
     }
 
     @Override
@@ -184,10 +186,10 @@ public class Teleop extends OpMode {
 
         if(gamepad1.right_bumper) {
             //Let Isaac set full power to the intake
-            intakePower = .7;
+            intakePower = .8;
         }else if(gamepad1.left_bumper || gamepad2.start) {
             //Reverse the intake
-            intakePower = -.7;
+            intakePower = -.8;
         }else{
             //If none of the other things are happening, intake is off
             intakePower = 0;
@@ -198,15 +200,13 @@ public class Teleop extends OpMode {
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightOpen);
             intakePower = .375;
-        }else if(gamepad2.dpad_up) {
-            //button to close the intake
-            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
-            IntakeFlapRight.setPosition(intakeFlapRightClosed);
+            armPower = .1;
         }else if(gamepad2.dpad_left){
             //Gold side, automatically open halfway and spin intake at full speed
             IntakeFlapLeft.setPosition(.4);
             IntakeFlapRight.setPosition(.6);
-            intakePower = .7;
+            intakePower = .8;
+            armPower = .1;
         }else{
             //If we're not scoring, then close the intake
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);

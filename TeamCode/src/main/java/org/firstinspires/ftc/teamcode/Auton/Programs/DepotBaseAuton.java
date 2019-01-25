@@ -3,13 +3,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
-@Autonomous(name="Depot|End in far crater ", group="Depot")
+@Autonomous(name="DEPOT | ENDS IN FAR CRATER ", group="Depot")
 public class DepotBaseAuton extends DeclarationsAutonomous {
 
     @Override
     public void runOpMode() {
         super.runOpMode();
-        unlatch(18);
+        unlatch(20);
         depotSideSample();
         depotSideDeployAndPark();
         endAuto(true);//Housekeeping, make sure slide is down, etc.

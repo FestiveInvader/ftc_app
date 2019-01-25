@@ -87,7 +87,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double armPVal = .015;
     double armPower;
 
-    public double teamMarkerDeploy = -.1;
+    public double teamMarkerDeploy = -.9;
     public double teamMarkerResting = .3;
 
     int goldPosition = 0;
@@ -463,13 +463,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     }
 
-    public void driveFromCraterAfterSampleToNearDepot(int inches, int delayUntil){
-        /*while(opModeIsActive() && runtime.seconds() < delayUntil){
-            telemetry.addData("Waiting to place team marker", 1);
+    public void driveFromCraterAfterSampleToNearDepot(int inches, long delayUntil){
+        while(runtime.seconds() < delayUntil && opModeIsActive()){
+            sleep(20);
+            telemetry.addData("Waiting...", 1);
             telemetry.update();
-
-            //make this sleep(runtime - wanted time ) or something
-        }*/
+        }
+       //make this sleep(runtime - wanted time ) or something
         encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
         double currentDistance = 200;
@@ -480,7 +480,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
     }
     public void craterSidePark(){
-        encoderDrive(.85, 48, reverse, 137, 3.5, true);
+        encoderDrive(.85, 52, reverse, 137, 3.5, true);
     }
     public void craterSideParkArmInCrater(){
         encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
@@ -516,43 +516,44 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }else if(goldPosition == 3){
             encoderDrive(.5, 28, forward, stayOnHeading, 2.5, true);
         }else{
-            encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
+            encoderDrive(.5, 28, forward, stayOnHeading, 2.5, true);
         }
     }
     public void depotSideDeployAndPark(){
         if(goldPosition == 1){
-            gyroTurn(turningSpeed, 45);//turn towards the depot
-            encoderDrive(.5, 18, forward, stayOnHeading, 3, true);
+            encoderDriveSmooth(.5, 28, forward, -42, 3);
+            stopDriveMotors();
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
             sleep(250);
-            encoderDrive(.75, 52, reverse, stayOnHeading, 5, true);
+            encoderDriveSmooth(.75, 36, reverse, -47, 5);
         }else if(goldPosition == 2){
             deployTeamMarker();
             sleep(200);
             encoderDrive(.5, 24, reverse, stayOnHeading, 2.5, true);
-            gyroTurn(turningSpeed, -90);//At this point we'll be facing the other alliances crater-ish
-            encoderDrive(.5, 18, forward, stayOnHeading, 2, true);
+            gyroTurn(turningSpeed, 90);//At this point we'll be facing the other alliances crater-ish
+            encoderDriveSmooth(.5, 35, reverse, -90, 2);//just hit the wall
+            encoderDriveSmooth(.5, 24, reverse, -55, 2);//just hit the wall
+
+            /*encoderDrive(.5, 18, forward, stayOnHeading, 2, true);
             gyroTurn(turningSpeed, -45);//face the near non-alliance wall
             encoderDrive(.35, 36, forward, stayOnHeading, 4, true);//just hit the wall
             encoderDrive(.2, 3, reverse, stayOnHeading, 2, true);//back away from the wall for turning clearance
-            gyroTurn(turningSpeed, 45);//turn towards the depot
-            encoderDrive(.5, 42, reverse, stayOnHeading, 3, true);
+            gyroTurn(turningSpeed, 50);//turn towards the depot
+            encoderDrive(.5, 36, reverse, stayOnHeading, 3, true);*/
         }else{
             gyroTurn(turningSpeed, -45);//face the near non-alliance wall
             encoderDriveSmooth(.5, 8, forward, stayOnHeading, 2);//just hit the wall
             encoderDriveSmooth(.35, 8, forward, 90, 2);//just hit the wall
             encoderDrive(.5, 20, forward, 45, 2, true);//just hit the wall
             encoderDrive(.35, 2, reverse, stayOnHeading, 4, true);//just hit the wall
-            gyroTurn(turningSpeed, 46);
+            gyroTurn(turningSpeed, 47);
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
             sleep(250);
-            encoderDrive(.75, 52, reverse, stayOnHeading, 5, true);
-
+            encoderDrive(.75, 36, reverse, -47, 5, true);
         }
-        gyroTurn(turningSpeed, 50);
-        encoderDrive(.5, 12, reverse, -52, 5, true);
-
-
+        //should stay at 24 inches, adjust other parts to get proper distance
+        encoderDriveSmooth(.35, 24, reverse, -50, 30);
+        stopDriveMotors();
     }
     //End Depot Side Functions
 

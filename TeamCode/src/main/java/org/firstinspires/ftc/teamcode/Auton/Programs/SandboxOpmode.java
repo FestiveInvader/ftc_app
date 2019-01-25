@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Auton.Programs;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -10,10 +11,7 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        while(opModeIsActive()) {
-            telemetry.addData("Arm Rot", potRotation());
-            telemetry.update();
-        }
-
+        deployTeamMarker();
+        sleep(10000);
     }
 }
