@@ -546,9 +546,11 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDriveSmooth(.35, 8, forward, 90, 2);//just hit the wall
             encoderDrive(.5, 20, forward, 45, 2, true);//just hit the wall
             encoderDrive(.35, 2, reverse, stayOnHeading, 4, true);//just hit the wall
-            gyroTurn(turningSpeed, 47);
+            gyroTurn(turningSpeed, 45);
+            encoderDrive(.35, 3, forward, -42, 4, true);//just hit the wall
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
             sleep(250);
+            gyroTurn(turningSpeed, 49);
             encoderDrive(.75, 36, reverse, -47, 5, true);
         }
         //should stay at 24 inches, adjust other parts to get proper distance
