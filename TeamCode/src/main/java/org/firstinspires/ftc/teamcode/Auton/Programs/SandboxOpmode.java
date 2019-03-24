@@ -11,7 +11,9 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        deployTeamMarker();
-        sleep(10000);
+        while(opModeIsActive()) {
+            telemetry.addData("Time", runtime.seconds());
+            telemetry.update();
+        }
     }
 }

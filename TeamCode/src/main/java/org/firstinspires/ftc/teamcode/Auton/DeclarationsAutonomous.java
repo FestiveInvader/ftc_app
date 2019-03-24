@@ -187,8 +187,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.addData("If I don't put the not !waitforstart or whatever here then it'll probably crash", 1);
             telemetry.update();
         }
-        ElapsedTime timer = new ElapsedTime();
-
+        runtime.reset();
     }
 
 
@@ -466,7 +465,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void driveFromCraterAfterSampleToNearDepot(int inches, long delayUntil){
         while(runtime.seconds() < delayUntil && opModeIsActive()){
             sleep(20);
-            telemetry.addData("Waiting...", 1);
+            telemetry.addData("Waiting...", delayUntil - runtime.seconds());
             telemetry.update();
         }
        //make this sleep(runtime - wanted time ) or something
@@ -559,7 +558,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     //End Depot Side Functions
 
-    //Start deciding mineral position
+    //Start deciding mineral positiokn
     public int decideFirstSampleheading(){
         int heading;
         if(goldPosition == 1){
@@ -787,6 +786,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     //End of autonomous housekeeping
     public void endAuto(boolean endWithArmUp){
+        encoderDrive(.35, 3, reverse, stayOnHeading, 1, true);
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         boolean putArmDown = true;

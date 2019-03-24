@@ -53,8 +53,8 @@ public class Teleop extends OpMode {
     double intakePower = 0;
     double armRotatePower = 0;
 
-    double teamMarkerDeploy = -.1;
-    double teamMarkerResting = .3;
+    public double teamMarkerDeploy = -.9;
+    public double teamMarkerResting = .2;
 
     boolean hangRatchetEngaged = true;
     double hangCamLeftEngagedPos = 1;
