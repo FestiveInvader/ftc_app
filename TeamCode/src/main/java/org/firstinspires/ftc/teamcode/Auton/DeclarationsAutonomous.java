@@ -58,13 +58,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double WheelDiameterInches = 3.0;     // For figuring circumference
     double CountsPerInch = ((CountsPerRev / ((WheelDiameterInches * 3.1415))/GearRatio));
 
-    double rev40TicksPerRev = 1120;
-    double hangingPulleyDiameter = 1.1;
+    double hangingMotorCountsPerInch = 537.6;
+    double hangingPulleyDiameter = .75;
     double hangingGearRatio = 60/40;
-    double ticksPerHangingRev = rev40TicksPerRev*hangingGearRatio;
+    double ticksPerHangingRev = hangingMotorCountsPerInch *hangingGearRatio;
 
-    double mineralArmSpoolDiameter = 1.78;
-    double ticksToExtendMineralArmInch = (rev40TicksPerRev/(mineralArmSpoolDiameter * 3.1415));
+    double mineralArmSpoolDiameter = 1;
+    double mineralArmMotorCountsPerInch = 1120;
+    double ticksToExtendMineralArmInch = (mineralArmMotorCountsPerInch /(mineralArmSpoolDiameter * 3.1415));
 
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
@@ -82,8 +83,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 30; //Absolutely closed is 11
-    double armDownRotation = 113;
+    double armScoringRotation = 45; //Absolutely closed is 11
+    double armDownRotation = 105;
     double armPVal = .015;
     double armPower;
 
@@ -416,7 +417,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the team marker may have to be made.
         //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
         encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
-        gyroTurn(turningSpeed, 15);
+        gyroTurn(turningSpeed, 20);
         while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
             //wait for 3 seconds to make sure TFOD has time to process the frames
             //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
@@ -728,6 +729,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void putArmDown() {
         while(opModeIsActive() && !armIsDown()) {
             putMineralArmDown();
+            setIntakePower(.8);
         }
         ArmTop.setPower(0);
         ArmBottom.setPower(0);

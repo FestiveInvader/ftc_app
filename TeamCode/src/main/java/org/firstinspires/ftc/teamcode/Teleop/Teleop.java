@@ -61,12 +61,13 @@ public class Teleop extends OpMode {
     double hangCamLeftUnengagedPos = 0;
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
-    double intakeFlapLeftOpen = 0;
-    double intakeFlapLeftClosed = 1;
+    double intakeFlapLeftOpen = .4;
+    double intakeFlapLeftClosed = .05;
+
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 40;
+    double armScoringRotation = 47.5;
     double armkP = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
 
@@ -192,24 +193,24 @@ public class Teleop extends OpMode {
             intakePower = -.8;
         }else{
             //If none of the other things are happening, intake is off
-            intakePower = 0;
+            intakePower = .15;
         }
 
         if(gamepad2.dpad_down){
             //Silver side, automatically open and spin intake at .15 speed
-            IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
-            IntakeFlapRight.setPosition(intakeFlapRightOpen);
-            intakePower = .375;
+            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+            //IntakeFlapRight.setPosition(intakeFlapRightOpen);
+            intakePower = .25;
             armPower = .1;
-        }else if(gamepad2.dpad_left){
+        }/*else if(gamepad2.dpad_left){
             //Gold side, automatically open halfway and spin intake at full speed
             IntakeFlapLeft.setPosition(.4);
             IntakeFlapRight.setPosition(.6);
             intakePower = .8;
-            armPower = .1;
-        }else{
+            armPower = .1;*/
+        else{
             //If we're not scoring, then close the intake
-            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+            IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }
 
@@ -246,7 +247,7 @@ public class Teleop extends OpMode {
                 hangingMotorPower = 0;
             }
         }
-        armSlidePower = -gamepad2.right_stick_y;
+        armSlidePower = gamepad2.right_stick_y;
 
 
         if(gamepad1.a){

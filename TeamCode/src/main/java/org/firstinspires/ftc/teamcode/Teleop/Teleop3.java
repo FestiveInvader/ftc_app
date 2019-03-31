@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.Teleop;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -12,9 +11,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import static com.qualcomm.robotcore.util.Range.clip;
 
-@TeleOp(name="Teleop Test", group="TEST")
-@Disabled
+
+@TeleOp(name="Teleop Test", group="TELEOP")
 public class Teleop3 extends OpMode {
     // This section declares hardware for the program, such as Motors, servos and sensors
 
@@ -30,7 +30,7 @@ public class Teleop3 extends OpMode {
 
     // Declare Servos
     public CRServo IntakeLeft;
-    public CRServo IntakeRight;
+    //public CRServo IntakeRight;
     public Servo HangCamLeft = null;
     public Servo HangCamRight = null;
     public Servo TeamMarker;
@@ -53,22 +53,23 @@ public class Teleop3 extends OpMode {
     double intakePower = 0;
     double armRotatePower = 0;
 
-    double teamMarkerDeploy = -.1;
-    double teamMarkerResting = .3;
+    public double teamMarkerDeploy = -.9;
+    public double teamMarkerResting = .2;
 
     boolean hangRatchetEngaged = true;
     double hangCamLeftEngagedPos = 1;
     double hangCamLeftUnengagedPos = 0;
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
-    double intakeFlapLeftOpen = 0;
-    double intakeFlapLeftClosed = 1;
+    double intakeFlapLeftOpen = .4;
+    double intakeFlapLeftClosed = .05;
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 40;
+    double armScoringRotation = 55;
     double armkP = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
     double armRotError = 0;
+    double armPos = 0;
 
 
     double hangSlideDownPos = 0;
@@ -89,7 +90,7 @@ public class Teleop3 extends OpMode {
         ArmSlide = hardwareMap.dcMotor.get("ArmSlide");
 
         IntakeLeft = hardwareMap.crservo.get("IntakeLeft");
-        IntakeRight = hardwareMap.crservo.get("IntakeRight");
+        //IntakeRight = hardwareMap.crservo.get("IntakeRight");
         IntakeFlapLeft = hardwareMap.servo.get("IntakeFlapLeft");
         IntakeFlapRight = hardwareMap.servo.get("IntakeFlapRight");
 
@@ -109,7 +110,7 @@ public class Teleop3 extends OpMode {
         RightBottom.setDirection(DcMotorSimple.Direction.FORWARD);
 
         HangingSlide.setDirection(DcMotorSimple.Direction.REVERSE);
-        IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        //IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
         LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -137,25 +138,19 @@ public class Teleop3 extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+        HangCamLeft.setPosition(hangCamLeftUnengagedPos);
+        HangCamRight.setPosition(hangCamRightUnengagedPos);
     }
 
     @Override
     public void loop() {
-        potRotation = ArmPot.getVoltage()/potMagicNumber;
-        ArmTop.setPower(gamepad1.left_stick_y);
-        ArmBottom.setPower(gamepad1.right_stick_y);
-        doTelemetry();
-    }
-    public void doTelemetry(){
-        telemetry.addData("Pot Voltage", ArmPot.getVoltage());
-        telemetry.addData("Pot Position", (ArmPot.getVoltage()/potMagicNumber));
-        telemetry.addData("left Joy,", gamepad1.left_stick_y);
-        telemetry.addData("Right Joy,", gamepad1.right_stick_y);
-        telemetry.addData("left power,", leftPower);
-        telemetry.addData("right power,", rightPower);
-        telemetry.addData("hanging power,", hangingMotorPower);
-        telemetry.addData("arm power,", armPower);
-        telemetry.addData("Magnetic switch", HangSlideLimit.getState());
+       if(gamepad1.a) {
+           IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
+       }
+        if(gamepad1.b){
+           IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+        }
+        telemetry.addData("armPos", IntakeFlapLeft.getPosition());
         telemetry.update();
     }
 }
