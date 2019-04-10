@@ -50,8 +50,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public BNO055IMU IMU;
     public I2CXLv2 FrontDistance;
 
-    double intakeFlapLeftOpen = 0;
-    double intakeFlapLeftClosed = 1;
     // Variables used  in functions
     double CountsPerRev = 537.6;    // Andymark NeveRest 20 encoder counts per revolution
     double GearRatio = 56/42;
@@ -90,6 +88,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     public double teamMarkerDeploy = -.9;
     public double teamMarkerResting = .3;
+
+    double intakeFlapLeftOpen = .9;
+    double intakeFlapLeftClosed = .35;
+
 
     int goldPosition = 0;
 
@@ -296,26 +298,43 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double leftSpeed;//var to store left side of drivetrain speed
         double rightSpeed;//var to store right side of drivetrain speed
         double PosOrNeg; //Var for us to store which way we'll be turning.
-        double minTurnSpeed = .3;//Minimum speed (and constant added to error) we will be turning
-        double maxTurnSpeed = .6;//Maximum speed we'll be turning, we don't want to have a super high val
+        double minTurnSpeed = .475;//Minimum speed (and constant added to error) we will be turning
+        double maxTurnSpeed = .7;//Maximum speed we'll be turning, we don't want to have a super high val
         // for this otherwise we won't decelerate for our target in time
         double error = getError(-angle);//set to a lower number so that if we are starting with a 0 heading it'll
+        double turningSpeedError = 0;
+        double desiredRotSpeed = .35;
+        double Kp = .01;
+        double Kd = .175;
+        int errorCount = 0;
+        int toleranceDegrees = 2;
         //still run through the loop, rather than
 
-        while(Math.abs(error) >= 1.25 && opModeIsActive()){
-            //While we aren't within a degree of our target and the opmode is running
-
-            error = getError(-angle);//get the difference between our current heading and our desired heading.
+        while(errorCount < 5 && opModeIsActive()){
             unextendHangSlide(true);//make sure the hanging slide is going (or is) down
 
-            if(Math.abs(IMU.getAngularVelocity().zRotationRate) < .2 && minTurnSpeed < .5 ){
+            //While we aren't within a degree of our target and the opmode is running
+            //if the error has been less than the desired tolerance for 5 loops, terminate.  This keeps
+            // the program from stopping and overshooting if we just happen onto a value.
+
+            if(Math.abs(error) < 2){
+                errorCount ++;
+            }else{
+                errorCount = 0;
+            }
+            error = getError(-angle);//get the difference between our current heading and our desired heading.
+            turningSpeedError = IMU.getAngularVelocity().zRotationRate - desiredRotSpeed;
+            double turningSpeed =minTurnSpeed + (Math.abs(error)*Kp)-(Math.sqrt(Math.abs((turningSpeedError)))-desiredRotSpeed)*Kd;
+
+            /*f(Math.abs(IMU.getAngularVelocity().zRotationRate) < .2 && minTurnSpeed < .5 ){
                 //get the angularVelocity (change in heading/time, basically) of the IMU, so we can see
                 //we're spinning too slow to turn, so up the minimum power so we can turn again
-                minTurnSpeed += .02;
-            }else if(minTurnSpeed > .5 || Math.abs(IMU.getAngularVelocity().zRotationRate) > .8){
+                minTurnSpeed += .03;
+            }else if(minTurnSpeed > maxTurnSpeed || Math.abs(IMU.getAngularVelocity().zRotationRate) > .8){
                 //makes sure we don't have a runnaway minPower.
                 minTurnSpeed = .3;
-            }
+            }*/
+
 
             // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
             // and adds the absolute value of error/200.  This allows for the robot to turn faster when farther
@@ -323,7 +342,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
             // as more accurate turning when using the GyroSensor
             PosOrNeg = Range.clip((int)error, -1, 1);
             //PosOrNeg lets us turn the correct direction, since otherwise we would have to always turn clockwise
-            leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/175 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            //leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/150 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+            leftSpeed  = Range.clip(turningSpeed, .35, 1)* PosOrNeg;
+
             rightSpeed = -leftSpeed;//right side goes negative left, so we actually turn.
 
             // Set powers to motors
@@ -339,6 +360,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.update();
         }
         stopDriveMotors();
+        ArmBottom.setPower(0);
+        ArmTop.setPower(0);
 
     }
     public double getError(double targetAngle) {
@@ -417,8 +440,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the team marker may have to be made.
         //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
         encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
-        gyroTurn(turningSpeed, 20);
-        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+        gyroTurn(turningSpeed, 15);
+        double time = elapsedTime.seconds();
+        while(goldPosition == 0 && elapsedTime.seconds() < time+2 && opModeIsActive()){
             //wait for 3 seconds to make sure TFOD has time to process the frames
             //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
             getGoldPositionOneMineral();
@@ -431,19 +455,23 @@ public class DeclarationsAutonomous extends LinearOpMode {
             //Position 1 is the leftmost mineral
         }
         gyroTurn(turningSpeed, decideFirstSampleheading());
-        putArmDown();
-        setIntakePower(.7);
-        sleep(500);
+
         if(goldPosition == 2){
+            encoderDrive(.35, 6, reverse, stayOnHeading, 2, true);
+            putArmDown();
+            setIntakePower(.7);
             encoderDrive(.25, 3, forward, stayOnHeading, 2, false);
-        }else{
-            encoderDrive(.25, 7, forward, stayOnHeading, 2, false);
-        }
-        if(goldPosition == 2){
             encoderDrive(.25, 4, forward, stayOnHeading, 2, true);
+
         }else{
+            encoderDrive(.35, 6, reverse, stayOnHeading, 2, true);
+            putArmDown();
+            setIntakePower(.7);
+            encoderDrive(.25, 7, forward, stayOnHeading, 2, false);
             encoderDrive(.25, 2, forward, stayOnHeading, 2, true);
         }
+        sleep(500);
+        encoderDrive(.35, 6, forward, stayOnHeading, 2, true);
         setIntakePower(0);
     }
     public void craterDoubleSample(){

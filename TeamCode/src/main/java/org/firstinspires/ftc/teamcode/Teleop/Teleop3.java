@@ -145,10 +145,10 @@ public class Teleop3 extends OpMode {
     @Override
     public void loop() {
        if(gamepad1.a) {
-           IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
+           IntakeFlapLeft.setPosition(.35);
        }
         if(gamepad1.b){
-           IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+           IntakeFlapLeft.setPosition(1);
         }
         telemetry.addData("armPos", IntakeFlapLeft.getPosition());
         telemetry.update();

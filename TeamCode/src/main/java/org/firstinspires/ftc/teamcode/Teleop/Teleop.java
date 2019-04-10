@@ -61,14 +61,15 @@ public class Teleop extends OpMode {
     double hangCamLeftUnengagedPos = 0;
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
-    double intakeFlapLeftOpen = .4;
-    double intakeFlapLeftClosed = .05;
+    double intakeFlapLeftOpen = .8;
+    double intakeFlapLeftClosed = .25;
 
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
     double armScoringRotation = 47.5;
-    double armkP = .015;//Change this for faster or slower auto arm rotation, .2 optimal?
+    double armIntakingPosition = 110;
+    double armkP = .02;//Change this for faster or slower auto arm rotation, .02 optimal?
     double armRotError = 0;
 
 
@@ -154,6 +155,15 @@ public class Teleop extends OpMode {
             //This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
             //this means that further away from the proper rotation (when the arm is down) the power
             //is greater than when it's close to the target.
+        }else if(gamepad2.left_bumper){
+            //This section of code is a proportional system that rotates our mineral scoring system
+            //into place.  This lets Samuel rotate the arm into place with just the push of a button
+            // instead of trying to rotate it into place manually.
+            armRotError = (Math.abs(potRotation)-Math.abs(armIntakingPosition));
+            armPower = Range.clip(armRotError* armkP, -1, 1);//is a P controller
+            //This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
+            //this means that further away from the proper rotation (when the arm is down) the power
+            //is greater than when it's close to the target.
         }else {
             //All these loops do is keep our arm from breaking itself.  We use the Rev potentiometer
             // to get the rotation of the arm, and have done testing with these limits to make sure
@@ -193,7 +203,7 @@ public class Teleop extends OpMode {
             intakePower = -.8;
         }else{
             //If none of the other things are happening, intake is off
-            intakePower = .15;
+            intakePower = 0;
         }
 
         if(gamepad2.dpad_down){
@@ -201,7 +211,7 @@ public class Teleop extends OpMode {
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             //IntakeFlapRight.setPosition(intakeFlapRightOpen);
             intakePower = .25;
-            armPower = .1;
+            //armPower = .1;
         }/*else if(gamepad2.dpad_left){
             //Gold side, automatically open halfway and spin intake at full speed
             IntakeFlapLeft.setPosition(.4);

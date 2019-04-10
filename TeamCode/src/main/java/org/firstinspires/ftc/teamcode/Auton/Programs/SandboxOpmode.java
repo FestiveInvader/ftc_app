@@ -12,7 +12,7 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     public void runOpMode() {
         super.runOpMode();
         while(opModeIsActive()) {
-            telemetry.addData("Time", runtime.seconds());
+            telemetry.addData("val", IMU.getAngularVelocity().zRotationRate);
             telemetry.update();
         }
     }
