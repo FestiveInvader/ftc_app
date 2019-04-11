@@ -62,13 +62,13 @@ public class Teleop extends OpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
     double intakeFlapLeftOpen = .8;
-    double intakeFlapLeftClosed = .25;
+    double intakeFlapLeftClosed = 0;
 
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 47.5;
-    double armIntakingPosition = 110;
+    double armScoringRotation = 65;
+    double armIntakingPosition = 120;
     double armkP = .02;//Change this for faster or slower auto arm rotation, .02 optimal?
     double armRotError = 0;
 
@@ -211,7 +211,7 @@ public class Teleop extends OpMode {
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             //IntakeFlapRight.setPosition(intakeFlapRightOpen);
             intakePower = .25;
-            //armPower = .1;
+            armPower = .2;
         }/*else if(gamepad2.dpad_left){
             //Gold side, automatically open halfway and spin intake at full speed
             IntakeFlapLeft.setPosition(.4);
@@ -242,17 +242,17 @@ public class Teleop extends OpMode {
 
         if (HangSlideLimit.getState() == false) {
             //hanging slide is down
-            hangingMotorPower = Range.clip(-gamepad1.left_trigger + -gamepad2.right_trigger, -1, 0);
+            hangingMotorPower = Range.clip(-gamepad1.left_trigger + -gamepad2.left_trigger, -1, 0);
         } else {
-            if(gamepad1.right_trigger > .1){
+            if(gamepad1.right_trigger > .25){
             //Allow control on gamepad 1 to hang, which should help increase speed of hanging
                 hangingMotorPower = gamepad1.right_trigger;//goes down
-            }else if(gamepad1.left_trigger > .1){
+            }else if(gamepad1.left_trigger > .25){
                 hangingMotorPower = -gamepad1.left_trigger;//goes up
-            }else if(gamepad2.right_trigger > .1){
-                hangingMotorPower = -gamepad2.right_trigger;//goes up
-            }else if(gamepad2.left_trigger > .1){
-                hangingMotorPower = gamepad2.left_trigger;//goes down
+            }else if(gamepad2.right_trigger > .25){
+                hangingMotorPower = gamepad2.right_trigger;//goes down
+            }else if(gamepad2.left_trigger > .25){
+                hangingMotorPower = -gamepad2.left_trigger;//goes up
             }else{
                 hangingMotorPower = 0;
             }

@@ -118,8 +118,8 @@ public class Teleop3 extends OpMode {
         RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -144,13 +144,8 @@ public class Teleop3 extends OpMode {
 
     @Override
     public void loop() {
-       if(gamepad1.a) {
-           IntakeFlapLeft.setPosition(.35);
-       }
-        if(gamepad1.b){
-           IntakeFlapLeft.setPosition(1);
-        }
-        telemetry.addData("armPos", IntakeFlapLeft.getPosition());
+        potRotation = ArmPot.getVoltage()/potMagicNumber;
+        telemetry.addData("armPos", potRotation);
         telemetry.update();
     }
 }

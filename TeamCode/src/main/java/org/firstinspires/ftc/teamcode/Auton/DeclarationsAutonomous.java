@@ -40,9 +40,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
     // Declare Servos
     public CRServo IntakeLeft;
     public CRServo IntakeRight;
+    public CRServo TeamMarker;
     public Servo HangCamLeft;
     public Servo HangCamRight;
-    public Servo TeamMarker;
     public Servo IntakeFlapLeft;
 
     public DigitalChannel HangSlideLimit;
@@ -81,16 +81,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 45; //Absolutely closed is 11
-    double armDownRotation = 105;
-    double armPVal = .015;
+    double armScoringRotation = 65;
+    double armDownRotation = 110;
+    double armPVal = .02;
     double armPower;
 
     public double teamMarkerDeploy = -.9;
     public double teamMarkerResting = .3;
 
-    double intakeFlapLeftOpen = .9;
-    double intakeFlapLeftClosed = .35;
+    double intakeFlapLeftOpen = .8;
+    double intakeFlapLeftClosed = 0;
 
 
     int goldPosition = 0;
@@ -135,7 +135,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         IntakeRight = hardwareMap.crservo.get("IntakeRight");
         HangCamLeft = hardwareMap.servo.get("HangCamLeft");
         HangCamRight = hardwareMap.servo.get("HangCamRight");
-        TeamMarker = hardwareMap.servo.get("TeamMarker");
+        TeamMarker = hardwareMap.crservo.get("TeamMarker");
         IntakeFlapLeft = hardwareMap.servo.get("IntakeFlapLeft");
 
 
@@ -298,19 +298,19 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double leftSpeed;//var to store left side of drivetrain speed
         double rightSpeed;//var to store right side of drivetrain speed
         double PosOrNeg; //Var for us to store which way we'll be turning.
-        double minTurnSpeed = .475;//Minimum speed (and constant added to error) we will be turning
+        double minTurnSpeed = .4;//Minimum speed (and constant added to error) we will be turning
         double maxTurnSpeed = .7;//Maximum speed we'll be turning, we don't want to have a super high val
         // for this otherwise we won't decelerate for our target in time
         double error = getError(-angle);//set to a lower number so that if we are starting with a 0 heading it'll
         double turningSpeedError = 0;
         double desiredRotSpeed = .35;
         double Kp = .01;
-        double Kd = .175;
+        double Kd = .215;
         int errorCount = 0;
         int toleranceDegrees = 2;
         //still run through the loop, rather than
-
-        while(errorCount < 5 && opModeIsActive()){
+        double timer = runtime.seconds() + 1.25;
+        while(errorCount < 5 && opModeIsActive() && timer > runtime.seconds()){
             unextendHangSlide(true);//make sure the hanging slide is going (or is) down
 
             //While we aren't within a degree of our target and the opmode is running
@@ -434,6 +434,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     //Start Crater side functions
     public void craterSideSample(){
+        IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
         ElapsedTime elapsedTime = new ElapsedTime();
         //should come immediately after unlatching
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
@@ -456,23 +457,29 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         gyroTurn(turningSpeed, decideFirstSampleheading());
 
-        if(goldPosition == 2){
-            encoderDrive(.35, 6, reverse, stayOnHeading, 2, true);
+        if(goldPosition == 1){
+            encoderDrive(.35, 4, reverse, 30, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.25, 3, forward, stayOnHeading, 2, false);
-            encoderDrive(.25, 4, forward, stayOnHeading, 2, true);
+            encoderDrive(.25, 3, forward, 30, 2, false);
+            encoderDrive(.25, 4, forward, 30, 2, true);
+
+        }else if(goldPosition == 2){
+            encoderDrive(.35, 4, reverse, 0, 2, true);
+            putArmDown();
+            setIntakePower(.7);
+            encoderDrive(.25, 3, forward, 0, 2, false);
+            encoderDrive(.25, 4, forward, 0, 2, true);
 
         }else{
-            encoderDrive(.35, 6, reverse, stayOnHeading, 2, true);
+            encoderDrive(.35, 4, reverse, -30, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.25, 7, forward, stayOnHeading, 2, false);
-            encoderDrive(.25, 2, forward, stayOnHeading, 2, true);
+            encoderDrive(.25, 7, forward, -30, 2, false);
+            encoderDrive(.25, 2, forward, -30, 2, true);
         }
         sleep(500);
-        encoderDrive(.35, 6, forward, stayOnHeading, 2, true);
-        setIntakePower(0);
+        encoderDrive(.35, 3, forward, stayOnHeading, 2, true);
     }
     public void craterDoubleSample(){
         encoderDriveSmooth(.5, 8, forward, 160, 2);
@@ -488,7 +495,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         deployTeamMarker();
         encoderDriveSmooth(.75, 12, reverse, 145, 3);
         encoderDriveSmooth(.75, 48, reverse, 138, 3);
-
+        TeamMarker.setPower(0);
     }
 
     public void driveFromCraterAfterSampleToNearDepot(int inches, long delayUntil){
@@ -498,14 +505,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.update();
         }
        //make this sleep(runtime - wanted time ) or something
-        encoderDrive(.5, 46, forward, stayOnHeading, 2.5, true);
+        encoderDrive(.5, 46, forward, 80, 2.5, true);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
         double currentDistance = 200;
         /*while(opModeIsActive() && currentDistance > 110){
             currentDistance = FrontDistance.getDistance();
             gyroDrive(130, .4, forward);
         }*/
-        encoderDrive(.5, inches, forward, stayOnHeading, 3, true);
+        encoderDrive(.5, inches-8, forward, 128, 3, true);
+        TeamMarker.setPower(1);
+        encoderDrive(.5, 8, forward, -128, 3, true);
     }
     public void craterSidePark(){
         encoderDrive(.85, 52, reverse, 137, 3.5, true);
@@ -549,10 +558,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     public void depotSideDeployAndPark(){
         if(goldPosition == 1){
-            encoderDriveSmooth(.5, 28, forward, -42, 3);
-            stopDriveMotors();
+            encoderDriveSmooth(.5, 20, forward, -42, 3);
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
-            sleep(250);
+            encoderDriveSmooth(.5, 8, forward, -42, 3);
             encoderDriveSmooth(.75, 36, reverse, -47, 5);
         }else if(goldPosition == 2){
             deployTeamMarker();
@@ -592,13 +600,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -27;
+            heading = -35;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 0;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 27;
+            heading = 35;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
             //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
@@ -804,13 +812,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
         Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
         IntakeLeft.setPower(power);
         IntakeRight.setPower(power);
-        IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+        IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
     }
     //End mineral system code
 
     //Start miscellaneous system code
     public void deployTeamMarker(){
-        TeamMarker.setPosition(teamMarkerDeploy);
+        TeamMarker.setPower(1);
     }
     //End miscellaneous system code
 
@@ -822,7 +830,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         boolean putArmDown = true;
         tfod.deactivate();
         //telemetry for autonomous testing to see any factors that may have went wrong
-        TeamMarker.setPosition(teamMarkerResting);
+        TeamMarker.setPower(0);
         if(endWithArmUp) {
             while (opModeIsActive() && hangSlideIsExtended()) {
                 unextendHangSlide(true);
