@@ -458,28 +458,27 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
 
         if(goldPosition == 1){
-            encoderDrive(.35, 4, reverse, 30, 2, true);
+            encoderDrive(.3, 4, reverse, 30, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.25, 3, forward, 30, 2, false);
-            encoderDrive(.25, 4, forward, 30, 2, true);
+            encoderDrive(.3, 7, forward, 30, 2, false);
+            encoderDrive(.35, 5, forward, 30, 2, true);
 
         }else if(goldPosition == 2){
-            encoderDrive(.35, 4, reverse, 0, 2, true);
+            encoderDrive(.3, 4, reverse, 0, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.25, 3, forward, 0, 2, false);
-            encoderDrive(.25, 4, forward, 0, 2, true);
+            encoderDrive(.3, 3, forward, 0, 2, false);
+            encoderDrive(.35, 7, forward, 0, 2, true);
 
         }else{
-            encoderDrive(.35, 4, reverse, -30, 2, true);
+            encoderDrive(.3, 4, reverse, -30, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.25, 7, forward, -30, 2, false);
-            encoderDrive(.25, 2, forward, -30, 2, true);
+            encoderDrive(.3, 7, forward, -30, 2, false);
+            encoderDrive(.35, 5, forward, -30, 2, true);
         }
-        sleep(500);
-        encoderDrive(.35, 3, forward, stayOnHeading, 2, true);
+
     }
     public void craterDoubleSample(){
         encoderDriveSmooth(.5, 8, forward, 160, 2);
@@ -512,12 +511,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
             currentDistance = FrontDistance.getDistance();
             gyroDrive(130, .4, forward);
         }*/
-        encoderDrive(.5, inches-8, forward, 128, 3, true);
+        encoderDrive(.5, inches-8, forward, 130, 3, true);
         TeamMarker.setPower(1);
-        encoderDrive(.5, 8, forward, -128, 3, true);
+        encoderDrive(.5, 8, forward, 130, 3, true);
     }
     public void craterSidePark(){
-        encoderDrive(.85, 52, reverse, 137, 3.5, true);
+        encoderDrive(.85, 52, reverse, 135, 3.5, true);
     }
     public void craterSideParkArmInCrater(){
         encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
