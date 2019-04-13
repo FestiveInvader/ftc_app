@@ -61,16 +61,18 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangingGearRatio = 60/40;
     double ticksPerHangingRev = hangingMotorCountsPerInch *hangingGearRatio;
 
-    double mineralArmSpoolDiameter = 1;
+    double mineralArmSpoolDiameter = 1.75;
     double mineralArmMotorCountsPerInch = 1120;
     double ticksToExtendMineralArmInch = (mineralArmMotorCountsPerInch /(mineralArmSpoolDiameter * 3.1415));
 
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
-    double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
+   /* double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
     double P_TURN_COEFF = .0021
             ;     // Larger is more responsive, but also less stable .0035 is best so far
     double P_DRIVE_COEFF = .15;     // Larger is more responsive, but also less stable
+    __LEGACY___
+    */
     public double turningSpeed = .4;
 
     double potMagicNumber = .01222;
@@ -81,8 +83,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armScoringRotation = 65;
-    double armDownRotation = 110;
+    double armDrivingPos = 50;
+    double armScoringPos = 65;
+    double armDownRotation = 90;
     double armPVal = .02;
     double armPower;
 
@@ -156,6 +159,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         ArmSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ArmSlide.setDirection(DcMotorSimple.Direction.REVERSE);
 
         IntakeRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -478,7 +482,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDrive(.3, 7, forward, -30, 2, false);
             encoderDrive(.35, 5, forward, -30, 2, true);
         }
-
+        setIntakePower(0);
     }
     public void craterDoubleSample(){
         encoderDriveSmooth(.5, 8, forward, 160, 2);
@@ -507,22 +511,20 @@ public class DeclarationsAutonomous extends LinearOpMode {
         encoderDrive(.5, 46, forward, 80, 2.5, true);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
         double currentDistance = 200;
-        /*while(opModeIsActive() && currentDistance > 110){
-            currentDistance = FrontDistance.getDistance();
-            gyroDrive(130, .4, forward);
-        }*/
-        encoderDrive(.5, inches-8, forward, 130, 3, true);
+        encoderDrive(.9, inches-12, forward, 130, 3, true);
+        //allow for team marker to begin deployment before actually being in the depot
         TeamMarker.setPower(1);
-        encoderDrive(.5, 8, forward, 130, 3, true);
+        encoderDrive(.9, 6, forward, 130, 3, true);
     }
     public void craterSidePark(){
         encoderDrive(.85, 52, reverse, 135, 3.5, true);
     }
+
     public void craterSideParkArmInCrater(){
-        encoderDriveSmooth(.75, 16, reverse, stayOnHeading, 3);
-        encoderDriveSmooth(.75, 6, reverse, 110, 2);
-        encoderDriveSmooth(.75, 6, reverse, 120, 2);
-        encoderDriveSmooth(.75, 18, reverse, 80, 2);
+        encoderDriveSmooth(.5, 16, reverse, 133, 3);
+        encoderDriveSmooth(.5, 6, reverse, 110, 3);
+        encoderDriveSmooth(.5, 6, reverse, 120, 3);
+        encoderDriveSmooth(.5, 18, reverse, 80, 3);
         gyroTurn(turningSpeed, 0);
     }
     //End Crater Side functions
@@ -777,7 +779,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
     }
     public void keepMineralArmUp(){
-        double armRotError = (Math.abs(potRotation())-Math.abs(armScoringRotation));
+        double armRotError = (Math.abs(potRotation())-Math.abs(armDrivingPos));
 
         armPower = Range.clip(armRotError*armPVal, -1, 1);
         ArmTop.setPower(armPower);
@@ -786,7 +788,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void putMineralArmDown(){
         double armRotError = (Math.abs(potRotation())-Math.abs(armDownRotation));
 
-        armPower = Range.clip(armRotError*armPVal, -.5, .5);
+        armPower = armRotError*armPVal;
         ArmTop.setPower(armPower);
         ArmBottom.setPower(armPower);
     }
@@ -798,11 +800,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         ArmSlide.setTargetPosition((int) ticksToExtendMineralArmInch * inchesToExtend);
         double timer = runtime.seconds() + 1;
-        while(timer > runtime.seconds() && opModeIsActive()){
-            keepMineralArmUp();
-        }
         while(ArmSlide.isBusy() && opModeIsActive()){
-            keepMineralArmUp();
             ArmSlide.setPower(1);
         }
         ArmSlide.setPower(0);
@@ -836,19 +834,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }else{
             //ending with arm parked in crater
-            extendMineralArm(14);
-            while (opModeIsActive()) {
-                if(potRotation() < 130) {
-                    putMineralArmDown();
-                }else{
-                    ArmTop.setPower(0);
-                    ArmBottom.setPower(0);                }
-                if(hangSlideIsExtended()){
+            while (opModeIsActive() && potRotation() < armDownRotation - 10) {
+                putMineralArmDown();
+                if (hangSlideIsExtended()) {
                     unextendHangSlide(false);
-                }else{
+                } else {
                     HangingSlide.setPower(0);
                 }
             }
+            setIntakePower(19);
+            extendMineralArm(12);
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();

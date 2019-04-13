@@ -18,7 +18,9 @@ public class CraterBaseAuton extends DeclarationsAutonomous {
         //Or to place it and sample the other team's sample
         driveFromCraterAfterSampleToNearDepot(32, 5);//latest is 18, normal should be 5 to avoid any delay
         //sleep here for allowing partner to place
-        craterSidePark();
-        endAuto(true);
+
+        //craterSidePark();
+        craterSideParkArmInCrater();
+        endAuto(false);
     }
 }

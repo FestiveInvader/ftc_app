@@ -31,9 +31,9 @@ public class Teleop extends OpMode {
     // Declare Servos
     public CRServo IntakeLeft;
     public CRServo IntakeRight;
+    public CRServo TeamMarker;
     public Servo HangCamLeft = null;
     public Servo HangCamRight = null;
-    public Servo TeamMarker;
     public Servo IntakeFlapLeft;
     public Servo IntakeFlapRight;
     public DigitalChannel HangSlideLimit;
@@ -67,7 +67,7 @@ public class Teleop extends OpMode {
     double intakeFlapRightOpen = 1;
     double intakeFlapRightClosed = 0;
 
-    double armScoringRotation = 65;
+    double armScoringRotation = 63.5;
     double armIntakingPosition = 120;
     double armkP = .02;//Change this for faster or slower auto arm rotation, .02 optimal?
     double armRotError = 0;
@@ -98,7 +98,7 @@ public class Teleop extends OpMode {
         HangCamLeft = hardwareMap.servo.get("HangCamLeft");
         HangCamRight = hardwareMap.servo.get("HangCamRight");
 
-        TeamMarker = hardwareMap.servo.get("TeamMarker");
+        TeamMarker = hardwareMap.crservo.get("TeamMarker");
 
         HangSlideLimit = hardwareMap.get(DigitalChannel.class, "HangSlideLimit");
         HangSlideLimit.setMode(DigitalChannel.Mode.INPUT);
@@ -211,7 +211,7 @@ public class Teleop extends OpMode {
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
             //IntakeFlapRight.setPosition(intakeFlapRightOpen);
             intakePower = .25;
-            armPower = .2;
+            armPower = .35;
         }/*else if(gamepad2.dpad_left){
             //Gold side, automatically open halfway and spin intake at full speed
             IntakeFlapLeft.setPosition(.4);
