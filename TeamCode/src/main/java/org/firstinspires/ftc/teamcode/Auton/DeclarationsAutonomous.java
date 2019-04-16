@@ -302,7 +302,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double leftSpeed;//var to store left side of drivetrain speed
         double rightSpeed;//var to store right side of drivetrain speed
         double PosOrNeg; //Var for us to store which way we'll be turning.
-        double minTurnSpeed = .4;//Minimum speed (and constant added to error) we will be turning
+        double minTurnSpeed = .385;//Minimum speed (and constant added to error) we will be turning
         double maxTurnSpeed = .7;//Maximum speed we'll be turning, we don't want to have a super high val
         // for this otherwise we won't decelerate for our target in time
         double error = getError(-angle);//set to a lower number so that if we are starting with a 0 heading it'll
@@ -437,7 +437,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
 
     //Start Crater side functions
-    public void craterSideSample(){
+    public void intakeSample(){
         IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
         ElapsedTime elapsedTime = new ElapsedTime();
         //should come immediately after unlatching
@@ -462,28 +462,32 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
 
         if(goldPosition == 1){
-            encoderDrive(.3, 4, reverse, 30, 2, true);
+            encoderDrive(.3, 4, reverse, 27, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.3, 7, forward, 30, 2, false);
-            encoderDrive(.35, 5, forward, 30, 2, true);
+            sleep(250);
+            encoderDrive(.25, 7, forward, 27, 2, false);
+            encoderDrive(.35, 5, forward, 27, 2, true);
 
         }else if(goldPosition == 2){
             encoderDrive(.3, 4, reverse, 0, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.3, 3, forward, 0, 2, false);
+            sleep(250);
+            encoderDrive(.25, 3, forward, 0, 2, false);
             encoderDrive(.35, 7, forward, 0, 2, true);
 
         }else{
-            encoderDrive(.3, 4, reverse, -30, 2, true);
+            encoderDrive(.3, 4, reverse, -27, 2, true);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.3, 7, forward, -30, 2, false);
-            encoderDrive(.35, 5, forward, -30, 2, true);
+            sleep(250);
+            encoderDrive(.25, 7, forward, -27, 2, false);
+            encoderDrive(.35, 5, forward, -27, 2, true);
         }
         setIntakePower(0);
     }
+
     public void craterDoubleSample(){
         encoderDriveSmooth(.5, 8, forward, 160, 2);
         encoderDriveSmooth(.65, 24, forward, 135, 1.5);
@@ -531,14 +535,18 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     //Start Depot Side Functions
     public void depotSideSample(){
+        IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
         ElapsedTime elapsedTime = new ElapsedTime();
-//should come immediately after unlatching
+        //should come immediately after unlatching
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
-        gyroTurn(turningSpeed, 0);
+        //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
         encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
         gyroTurn(turningSpeed, 15);
-        while(goldPosition == 0 && elapsedTime.seconds() < 3 && opModeIsActive()){
+        double time = elapsedTime.seconds();
+        while(goldPosition == 0 && elapsedTime.seconds() < time+2 && opModeIsActive()){
+            //wait for 3 seconds to make sure TFOD has time to process the frames
+            //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
             getGoldPositionOneMineral();
             unextendHangSlide(true);
         }
@@ -549,16 +557,32 @@ public class DeclarationsAutonomous extends LinearOpMode {
             //Position 1 is the leftmost mineral
         }
         gyroTurn(turningSpeed, decideFirstSampleheading());
-        if(goldPosition == 2){
-            encoderDrive(.5, 36, forward, stayOnHeading, 2.5, true);
-        }else if(goldPosition == 3){
-            encoderDrive(.5, 28, forward, stayOnHeading, 2.5, true);
+
+        if(goldPosition == 1){
+            encoderDrive(.3, 4, reverse, 30, 2, true);
+            putArmDown();
+            setIntakePower(.7);
+            encoderDrive(.3, 7, forward, 30, 2, false);
+            encoderDrive(.35, 5, forward, 30, 2, true);
+
+        }else if(goldPosition == 2){
+            encoderDrive(.3, 4, reverse, 0, 2, true);
+            putArmDown();
+            setIntakePower(.7);
+            encoderDrive(.3, 3, forward, 0, 2, false);
+            encoderDrive(.35, 7, forward, 0, 2, true);
+
         }else{
-            encoderDrive(.5, 28, forward, stayOnHeading, 2.5, true);
+            encoderDrive(.3, 4, reverse, -30, 2, true);
+            putArmDown();
+            setIntakePower(.7);
+            encoderDrive(.3, 7, forward, -30, 2, false);
+            encoderDrive(.35, 5, forward, -30, 2, true);
         }
+        setIntakePower(0);
     }
     public void depotSideDeployAndPark(){
-        if(goldPosition == 1){
+        /*if(goldPosition == 1){
             encoderDriveSmooth(.5, 20, forward, -42, 3);
             deployTeamMarker();//At this point we'll be on the edge of the depot and about to place the marker
             encoderDriveSmooth(.5, 8, forward, -42, 3);
@@ -571,12 +595,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDriveSmooth(.5, 35, reverse, -90, 2);//just hit the wall
             encoderDriveSmooth(.5, 24, reverse, -55, 2);//just hit the wall
 
-            /*encoderDrive(.5, 18, forward, stayOnHeading, 2, true);
+            *//*encoderDrive(.5, 18, forward, stayOnHeading, 2, true);
             gyroTurn(turningSpeed, -45);//face the near non-alliance wall
             encoderDrive(.35, 36, forward, stayOnHeading, 4, true);//just hit the wall
             encoderDrive(.2, 3, reverse, stayOnHeading, 2, true);//back away from the wall for turning clearance
             gyroTurn(turningSpeed, 50);//turn towards the depot
-            encoderDrive(.5, 36, reverse, stayOnHeading, 3, true);*/
+            encoderDrive(.5, 36, reverse, stayOnHeading, 3, true);*//*
         }else{
             gyroTurn(turningSpeed, -45);//face the near non-alliance wall
             encoderDriveSmooth(.5, 8, forward, stayOnHeading, 2);//just hit the wall
@@ -589,9 +613,23 @@ public class DeclarationsAutonomous extends LinearOpMode {
             sleep(250);
             gyroTurn(turningSpeed, 49);
             encoderDrive(.75, 36, reverse, -47, 5, true);
-        }
+        }*/
+        encoderDrive(.5, 46, forward, 80, 2.5, true);
+        encoderDrive(.5, 1, reverse, 80, 2, true);
+        gyroTurn(turningSpeed, 35);
         //should stay at 24 inches, adjust other parts to get proper distance
-        encoderDriveSmooth(.35, 24, reverse, -50, 30);
+        encoderDriveSmooth(.9, 8, forward, -37, 5);
+        encoderDriveSmooth(.9, 8, forward, -42, 5);
+        TeamMarker.setPower(1);
+        encoderDrive(.9, 18, forward, -45, 5, true);
+        TeamMarker.setPower(0);
+        encoderDriveSmooth(.9, 12, reverse, -43, 5);
+        encoderDriveSmooth(.75, 18, reverse, -25, 5);
+        stopDriveMotors();
+        gyroTurn(turningSpeed, -35);
+        encoderDriveSmooth(.5, 2, reverse, 35, 5);
+        stopDriveMotors();
+        gyroTurn(turningSpeed, -135);
         stopDriveMotors();
     }
     //End Depot Side Functions
@@ -601,16 +639,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
         int heading;
         if(goldPosition == 1){
             telemetry.addData("On your left", "Marvel reference");
-            heading = -35;
+            heading = -30;
         }else if (goldPosition == 2){
             telemetry.addData("Center", "Like Shaq");
             heading = 0;
         }else if(goldPosition == 3){
             telemetry.addData("Right", "Like I always am");
-            heading = 35;
+            heading = 30;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
-            //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
+            //if this ever shows up, it's most likely that we didn't see the samples in @intakeSample or something
             heading = 0;
         }
         telemetry.update();
@@ -629,7 +667,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             heading = -130;
         }else{
             telemetry.addData("Something is very wrong", "Decide first sample heading function");
-            //if this ever shows up, it's most likely that we didn't see the samples in @craterSideSample or something
+            //if this ever shows up, it's most likely that we didn't see the samples in @intakeSample or something
             heading = 0;
         }
         telemetry.update();
@@ -802,6 +840,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double timer = runtime.seconds() + 1;
         while(ArmSlide.isBusy() && opModeIsActive()){
             ArmSlide.setPower(1);
+            setIntakePower(.8);
         }
         ArmSlide.setPower(0);
     }
@@ -821,7 +860,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     //End of autonomous housekeeping
     public void endAuto(boolean endWithArmUp){
-        encoderDrive(.35, 3, reverse, stayOnHeading, 1, true);
+        //encoderDrive(.35, 3, reverse, stayOnHeading, 1, true);
         ArmBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         ArmTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         boolean putArmDown = true;
@@ -834,6 +873,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }else{
             //ending with arm parked in crater
+            setIntakePower(.8);
             while (opModeIsActive() && potRotation() < armDownRotation - 10) {
                 putMineralArmDown();
                 if (hangSlideIsExtended()) {
@@ -842,8 +882,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
                     HangingSlide.setPower(0);
                 }
             }
-            setIntakePower(19);
-            extendMineralArm(12);
+            extendMineralArm(18);
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();

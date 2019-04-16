@@ -10,10 +10,12 @@ public class DepotBaseAuton extends DeclarationsAutonomous {
     public void runOpMode() {
         super.runOpMode();
         unlatch(20);
-        depotSideSample();
+        intakeSample();
+        gyroTurn(turningSpeed, -80 );//turn to the left, facing the crater-ish
         depotSideDeployAndPark();
-        endAuto(true);//Housekeeping, make sure slide is down, etc.
+        endAuto(false);//Housekeeping, make sure slide is down, etc.
         //Potentially make a depot option that will go park in our crater side by going under the lander?
         //It'd be sweet}
+        encoderDrive(.25, 2, forward,stayOnHeading,3,false);
     }
 }

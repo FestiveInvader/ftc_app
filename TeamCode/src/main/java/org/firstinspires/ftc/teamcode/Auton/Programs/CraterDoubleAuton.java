@@ -11,7 +11,7 @@ public class CraterDoubleAuton extends DeclarationsAutonomous {
         //we absolutely have to place the marker and park.
         super.runOpMode();
         unlatch(18);
-        craterSideSample();
+        intakeSample();
         gyroTurn(turningSpeed, -80 );
         driveFromCraterAfterSampleToNearDepot(18, 22);
         craterDoubleSample();
