@@ -62,8 +62,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double ticksPerHangingRev = hangingMotorCountsPerInch *hangingGearRatio;
 
     double mineralArmSpoolDiameter = 1.75;
-    double mineralArmMotorCountsPerInch = 1120;
-    double ticksToExtendMineralArmInch = (mineralArmMotorCountsPerInch /(mineralArmSpoolDiameter * 3.1415));
+    double mineralArmMotorCountsPerRotation = 1120;
+    double ticksToExtendMineralArmInch = (mineralArmMotorCountsPerRotation /(mineralArmSpoolDiameter * 3.1415));
 
     double ticksPerHangingInch =  (ticksPerHangingRev/(hangingPulleyDiameter * 3.1415));
 
@@ -462,12 +462,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
 
         if(goldPosition == 1){
-            encoderDrive(.3, 4, reverse, 27, 2, true);
+            encoderDrive(.3, 4, reverse, 30, 2, true);
             putArmDown();
             setIntakePower(.7);
             sleep(250);
-            encoderDrive(.25, 7, forward, 27, 2, false);
-            encoderDrive(.35, 5, forward, 27, 2, true);
+            encoderDrive(.25, 7, forward, 30, 2, false);
+            encoderDrive(.35, 5, forward, 30, 2, true);
 
         }else if(goldPosition == 2){
             encoderDrive(.3, 4, reverse, 0, 2, true);
@@ -478,12 +478,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDrive(.35, 7, forward, 0, 2, true);
 
         }else{
-            encoderDrive(.3, 4, reverse, -27, 2, true);
+            encoderDrive(.3, 4, reverse, -30, 2, true);
             putArmDown();
             setIntakePower(.7);
             sleep(250);
-            encoderDrive(.25, 7, forward, -27, 2, false);
-            encoderDrive(.35, 5, forward, -27, 2, true);
+            encoderDrive(.25, 7, forward, -30, 2, false);
+            encoderDrive(.35, 5, forward, -30, 2, true);
         }
         setIntakePower(0);
     }
@@ -836,11 +836,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     public void extendMineralArm(int inchesToExtend){
         ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        ArmSlide.setTargetPosition((int) ticksToExtendMineralArmInch * inchesToExtend);
+        ArmSlide.setTargetPosition(ArmSlide.getCurrentPosition() + (int) (ticksToExtendMineralArmInch * inchesToExtend));
         double timer = runtime.seconds() + 1;
         while(ArmSlide.isBusy() && opModeIsActive()){
             ArmSlide.setPower(1);
             setIntakePower(.8);
+            telemetry.addData("Target", ArmSlide.getTargetPosition());
+            telemetry.addData("Current", ArmSlide.getCurrentPosition());
+            telemetry.update();
         }
         ArmSlide.setPower(0);
     }
@@ -882,7 +885,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
                     HangingSlide.setPower(0);
                 }
             }
-            extendMineralArm(18);
+            extendMineralArm(14);
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();
