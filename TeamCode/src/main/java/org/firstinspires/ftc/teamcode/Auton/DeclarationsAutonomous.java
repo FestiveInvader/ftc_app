@@ -460,14 +460,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
             //Position 1 is the leftmost mineral
         }
         gyroTurn(turningSpeed, decideFirstSampleheading());
-
+/*
         if(goldPosition == 1){
             encoderDrive(.3, 4, reverse, 30, 2, true);
             putArmDown();
             setIntakePower(.7);
             sleep(250);
             encoderDrive(.25, 7, forward, 30, 2, false);
-            encoderDrive(.35, 5, forward, 30, 2, true);
+            encoderDrive(.35, 5, forward, 0, 2, true);
 
         }else if(goldPosition == 2){
             encoderDrive(.3, 4, reverse, 0, 2, true);
@@ -482,6 +482,20 @@ public class DeclarationsAutonomous extends LinearOpMode {
             putArmDown();
             setIntakePower(.7);
             sleep(250);
+            encoderDrive(.25, 7, forward, -30, 2, false);
+            encoderDrive(.35, 5, forward, -30, 2, true);
+        }
+        setIntakePower(0);*/
+
+        if(goldPosition == 1){
+            encoderDrive(.25, 7, forward, 30, 2, false);
+            encoderDrive(.35, 5, forward, 0, 2, true);
+
+        }else if(goldPosition == 2){
+            encoderDrive(.25, 3, forward, 0, 2, false);
+            encoderDrive(.35, 7, forward, 0, 2, true);
+
+        }else{
             encoderDrive(.25, 7, forward, -30, 2, false);
             encoderDrive(.35, 5, forward, -30, 2, true);
         }
@@ -629,7 +643,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, -35);
         encoderDriveSmooth(.5, 2, reverse, 35, 5);
         stopDriveMotors();
-        gyroTurn(turningSpeed, -135);
+        gyroTurn(turningSpeed, -127);
         stopDriveMotors();
     }
     //End Depot Side Functions
