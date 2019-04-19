@@ -295,13 +295,19 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
     }
     public void gyroTurn(double speed, double angle) {
+        // This function allows for the robot to turn faster when farther
+        // away from the target, and turn slower when closer to the target.
+
+        //Set the motors to brake, since we want to make sure that we stay on target once we hit it
         LeftTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LeftBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RightBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         double leftSpeed;//var to store left side of drivetrain speed
         double rightSpeed;//var to store right side of drivetrain speed
         double PosOrNeg; //Var for us to store which way we'll be turning.
+<<<<<<< HEAD
         double minTurnSpeed = .385;//Minimum speed (and constant added to error) we will be turning
         double maxTurnSpeed = .7;//Maximum speed we'll be turning, we don't want to have a super high val
         // for this otherwise we won't decelerate for our target in time
@@ -314,44 +320,50 @@ public class DeclarationsAutonomous extends LinearOpMode {
         int toleranceDegrees = 2;
         //still run through the loop, rather than
         double timer = runtime.seconds() + 1.25;
+=======
+
+        double minTurnSpeed = .4;//Minimum speed (and constant added to error) we will be turning
+        double error = getError(-angle); //Var to store error between current and desired angles
+        double turningSpeedError = 0; //Var to store error between current and desired turning speed
+        double desiredTurningSpeed = .35;  //Desired turning speed
+        double Kp = .01;//Kp term value used in proportional term calculation
+        double Kd = .215;//Kd term value used in derivative term calculation
+
+
+        int toleranceDegrees = 2; //Tolerance in degrees that we will count the robot as being on heading
+        int errorCount = 0;//Var to store amount of loops that the error has been less than
+        //the amount of tolerance degrees
+        double timer = runtime.seconds() + 2;// timer to make sure that if we stall we'll still
+        //exit the loop and continue with autonomous
+
+>>>>>>> a28b0da2193ef2fc643814d58e93d9dee8a8c0b1
         while(errorCount < 5 && opModeIsActive() && timer > runtime.seconds()){
             unextendHangSlide(true);//make sure the hanging slide is going (or is) down
 
-            //While we aren't within a degree of our target and the opmode is running
-            //if the error has been less than the desired tolerance for 5 loops, terminate.  This keeps
-            // the program from stopping and overshooting if we just happen onto a value.
-
-            if(Math.abs(error) < 2){
+            /*While we aren't within the tolerance or error of our target and the opmode is running
+            if the error has been less than the desired tolerance for 5 loops, terminate.  This keeps
+            the program from stopping and overshooting if we just happen onto the correct value once.*/
+            if(Math.abs(error) < toleranceDegrees){
                 errorCount ++;
             }else{
                 errorCount = 0;
             }
+
             error = getError(-angle);//get the difference between our current heading and our desired heading.
-            turningSpeedError = IMU.getAngularVelocity().zRotationRate - desiredRotSpeed;
-            double turningSpeed =minTurnSpeed + (Math.abs(error)*Kp)-(Math.sqrt(Math.abs((turningSpeedError)))-desiredRotSpeed)*Kd;
+            turningSpeedError = IMU.getAngularVelocity().zRotationRate - desiredTurningSpeed;
+            /*get the minimum turning speed + the proportional error -
+            (the square root of the absolute value of the turningSpeedError and the desiredTurningSpeed)*Kd */
+            double turningSpeed = minTurnSpeed + (Math.abs(error)*Kp)-(Math.sqrt(Math.abs((turningSpeedError)))-desiredTurningSpeed)*Kd;
 
-            /*f(Math.abs(IMU.getAngularVelocity().zRotationRate) < .2 && minTurnSpeed < .5 ){
-                //get the angularVelocity (change in heading/time, basically) of the IMU, so we can see
-                //we're spinning too slow to turn, so up the minimum power so we can turn again
-                minTurnSpeed += .03;
-            }else if(minTurnSpeed > maxTurnSpeed || Math.abs(IMU.getAngularVelocity().zRotationRate) > .8){
-                //makes sure we don't have a runnaway minPower.
-                minTurnSpeed = .3;
-            }*/
-
-
-            // This is the main part of the Proportional GyroTurn.  This takes a set power variable,
-            // and adds the absolute value of error/200.  This allows for the robot to turn faster when farther
-            // away from the target, and turn slower when closer to the target.  This allows for quicker, as well
-            // as more accurate turning when using the GyroSensor
+            /*Get which way we should be turnging by clipping the error and seeing which direction it is,
+            then passing that information on to when we set powers.  Otherwise we'd also turn clockwise*/
             PosOrNeg = Range.clip((int)error, -1, 1);
-            //PosOrNeg lets us turn the correct direction, since otherwise we would have to always turn clockwise
-            //leftSpeed  = Range.clip(minTurnSpeed + Math.abs(error)/150 , minTurnSpeed, maxTurnSpeed)* PosOrNeg;
+
+            //set the speed of the motor variables
             leftSpeed  = Range.clip(turningSpeed, .35, 1)* PosOrNeg;
+            rightSpeed = -leftSpeed;
 
-            rightSpeed = -leftSpeed;//right side goes negative left, so we actually turn.
-
-            // Set powers to motors
+            //Set powers to motors
             LeftTop.setPower(leftSpeed);
             LeftBottom.setPower(leftSpeed);
             RightTop.setPower(rightSpeed);
@@ -363,10 +375,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.addData("turning speed.",  IMU.getAngularVelocity().zRotationRate);
             telemetry.update();
         }
+        //make sure we stop everything after we're done turning
         stopDriveMotors();
         ArmBottom.setPower(0);
         ArmTop.setPower(0);
-
     }
     public double getError(double targetAngle) {
         //This function compares the current heading to the target heading, and returns the error
@@ -378,7 +390,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         return robotError;
     }
     public void gyroDrive(double targetAngle, double targetSpeed, int direction) {
-        //For use with other functions, but lets us use the gyro to keep the robot on a certain heading
+        //For use with other functions (mainly encoderDrive), but lets us use the gyro to keep the robot on a certain heading
         // it's proportional, so if for instance, a robot hits us, this will account for that, and
         // correct the robot's heading.  It's not smart enough to oversteer to make sure we're on the exact
         // same plain, but it's good enough for our use case since people shouldn't hit us in auton
@@ -780,8 +792,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmBottom.setPower(0);
     }
     public void unextendHangSlide(boolean keepArmUp){
-        //this is made so it can be in a loop by itself, or in another loop.
+        //This should be called in a loop to make sure that the linear slide is down
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //setting the power to float lets us ensure that once we cut power to the motor it won't
+        //keep straining if it went a tiny bit past it's lower limit before the sensor was tripped
         HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         if(!hangSlidesDown) {
             if (hangSlideIsExtended()) {
@@ -792,10 +806,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }
         if (keepArmUp) {
+            //call keepMineralArmUp() to make sure the arm isn't in the way of the hook coming down
             keepMineralArmUp();
         }
     }
     public boolean hangSlideIsExtended(){
+        //this function sees whether or not the linear slide is still extended or not
         if(HangSlideLimit.getState() == false){
             return false;
         }else {
@@ -806,7 +822,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
 
     //Start mineral system code
     public void rotateArm(int desiredRot) {
+        //this function rotates the arm to a certain desired rotation that's passed to the function
         while(opModeIsActive() && !armIsDown()) {
+            //get the error (in degrees) between the arm's current rotation and the desired rotation
+            //then multiply by the Kp value to produce a workable power to rotate the arm
             double armRotError = (Math.abs(potRotation())-Math.abs(desiredRot));
             armPower = Range.clip(armRotError*armPVal, -.5, .5);
             ArmTop.setPower(armPower);
@@ -850,7 +869,13 @@ public class DeclarationsAutonomous extends LinearOpMode {
     }
     public void extendMineralArm(int inchesToExtend){
         ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+<<<<<<< HEAD
         ArmSlide.setTargetPosition(ArmSlide.getCurrentPosition() + (int) (ticksToExtendMineralArmInch * inchesToExtend));
+=======
+        //in constructor the math is calculated for ticks per inch of extension on the mineral arm
+        //That is now used to extend it so that we can reach into the crater more
+        ArmSlide.setTargetPosition((int) ticksToExtendMineralArmInch * inchesToExtend);
+>>>>>>> a28b0da2193ef2fc643814d58e93d9dee8a8c0b1
         double timer = runtime.seconds() + 1;
         while(ArmSlide.isBusy() && opModeIsActive()){
             ArmSlide.setPower(1);
@@ -862,6 +887,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         ArmSlide.setPower(0);
     }
     public void setIntakePower(double power){
+        //simply a function to set power to certain servos
         Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
         IntakeLeft.setPower(power);
         IntakeRight.setPower(power);
@@ -884,6 +910,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         tfod.deactivate();
         //telemetry for autonomous testing to see any factors that may have went wrong
         TeamMarker.setPower(0);
+        //if we want to end with the arm up, then make sure the hanging slide is down.
+        //Else, put the arm down and extend it (while intaking) to gain an extra second for
+        //driver controlled
         if(endWithArmUp) {
             while (opModeIsActive() && hangSlideIsExtended()) {
                 unextendHangSlide(true);
@@ -899,7 +928,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
                     HangingSlide.setPower(0);
                 }
             }
+<<<<<<< HEAD
             extendMineralArm(14);
+=======
+            setIntakePower(1);
+            extendMineralArm(12);
+>>>>>>> a28b0da2193ef2fc643814d58e93d9dee8a8c0b1
         }
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();

@@ -147,27 +147,22 @@ public class Teleop extends OpMode {
     public void loop() {
         potRotation = ArmPot.getVoltage()/potMagicNumber;
         if(gamepad2.right_bumper || gamepad1.dpad_up){
-            //This section of code is a proportional system that rotates our mineral scoring system
-            //into place.  This lets Samuel rotate the arm into place with just the push of a button
-            // instead of trying to rotate it into place manually.
+            /*This section of code is a proportional system that rotates our mineral scoring system
+            into place.  This lets Samuel rotate the arm into place with just the push of a button
+            instead of trying to rotate it into place manually.*/
             armRotError = (Math.abs(potRotation)-Math.abs(armScoringRotation));
             armPower = Range.clip(armRotError* armkP, -1, 1);//is a P controller
-            //This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
-            //this means that further away from the proper rotation (when the arm is down) the power
-            //is greater than when it's close to the target.
+            /*This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
+            this means that further away from the proper rotation (when the arm is down) the power
+            is greater than when it's close to the target.*/
         }else if(gamepad2.left_bumper){
-            //This section of code is a proportional system that rotates our mineral scoring system
-            //into place.  This lets Samuel rotate the arm into place with just the push of a button
-            // instead of trying to rotate it into place manually.
+            //see above if loop for explanation, this is just for a different rotation of the arm
             armRotError = (Math.abs(potRotation)-Math.abs(armIntakingPosition));
-            armPower = Range.clip(armRotError* armkP, -1, 1);//is a P controller
-            //This bottom line multiplies the Pvalue (.015) by the erorr, to give us motor power
-            //this means that further away from the proper rotation (when the arm is down) the power
-            //is greater than when it's close to the target.
+            armPower = Range.clip(armRotError* armkP, -1, 1);//see above for explanation
         }else {
-            //All these loops do is keep our arm from breaking itself.  We use the Rev potentiometer
-            // to get the rotation of the arm, and have done testing with these limits to make sure
-            // they are in the right place.
+            /*All these loops do is keep our arm from breaking itself.  We use the Rev potentiometer
+            to get the rotation of the arm, and have done testing with these limits to make sure
+            they are in the right place.*/
             if (potRotation <= 11) {
                 //if the arm is too far back, move it up slowly
                 armPower = Range.clip(-gamepad2.left_stick_y - .2, -1, 0);
@@ -212,33 +207,11 @@ public class Teleop extends OpMode {
             //IntakeFlapRight.setPosition(intakeFlapRightOpen);
             intakePower = .25;
             armPower = .35;
-        }/*else if(gamepad2.dpad_left){
-            //Gold side, automatically open halfway and spin intake at full speed
-            IntakeFlapLeft.setPosition(.4);
-            IntakeFlapRight.setPosition(.6);
-            intakePower = .8;
-            armPower = .1;*/
-        else{
+        }else{
             //If we're not scoring, then close the intake
             IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             IntakeFlapRight.setPosition(intakeFlapRightClosed);
         }
-
-        /*if(gamepad1.right_trigger > .1){
-            if(hangRatchetEngaged){
-
-                //wait a second before allowing power
-                hangRatchetEngaged= false;
-            }else{
-                //motor power = gamepad1.right_trigger;
-            }
-        }
-        if(gamepad1.left_trigger > .1){
-            hangRatchetEngaged = true;
-            //motorPower = trigger down
-        }*/
-
-
 
         if (HangSlideLimit.getState() == false) {
             //hanging slide is down
@@ -261,10 +234,10 @@ public class Teleop extends OpMode {
 
 
         if(gamepad1.a){
-            //If either of the a buttons are pressed, engage the ratchet system
+            //If the a button is pressed, engage the ratchet system
             hangRatchetEngaged = true;
         }else if (gamepad1.b){
-            //if either of the b buttons are pressed, disengage the ratchet system
+            //if the b button is pressed, disengage the ratchet system
             hangRatchetEngaged = false;
         }
 
