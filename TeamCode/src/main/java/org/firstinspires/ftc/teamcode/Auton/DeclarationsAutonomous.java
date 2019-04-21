@@ -302,18 +302,18 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double leftSpeed;//var to store left side of drivetrain speed
         double rightSpeed;//var to store right side of drivetrain speed
         double PosOrNeg; //Var for us to store which way we'll be turning.
-        double minTurnSpeed = .385;//Minimum speed (and constant added to error) we will be turning
+        double minTurnSpeed = .4;//Minimum speed (and constant added to error) we will be turning
         double maxTurnSpeed = .7;//Maximum speed we'll be turning, we don't want to have a super high val
         // for this otherwise we won't decelerate for our target in time
         double error = getError(-angle);//set to a lower number so that if we are starting with a 0 heading it'll
         double turningSpeedError = 0;
-        double desiredRotSpeed = .35;
+        double desiredRotSpeed = .4;
         double Kp = .01;
         double Kd = .215;
         int errorCount = 0;
         int toleranceDegrees = 2;
         //still run through the loop, rather than
-        double timer = runtime.seconds() + 1.25;
+        double timer = runtime.seconds() + 2;
         while(errorCount < 5 && opModeIsActive() && timer > runtime.seconds()){
             unextendHangSlide(true);//make sure the hanging slide is going (or is) down
 
@@ -445,7 +445,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the team marker may have to be made.
         //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
         encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
-        gyroTurn(turningSpeed, 15);
+        gyroTurn(turningSpeed, 18);
         double time = elapsedTime.seconds();
         while(goldPosition == 0 && elapsedTime.seconds() < time+2 && opModeIsActive()){
             //wait for 3 seconds to make sure TFOD has time to process the frames
@@ -488,16 +488,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
         setIntakePower(0);*/
 
         if(goldPosition == 1){
-            encoderDrive(.25, 7, forward, 30, 2, false);
-            encoderDrive(.35, 5, forward, 0, 2, true);
+            encoderDrive(.75, 18, forward, 30, 2, true);
+            encoderDrive(.75, 11, reverse, 30, 2, true);
 
         }else if(goldPosition == 2){
-            encoderDrive(.25, 3, forward, 0, 2, false);
-            encoderDrive(.35, 7, forward, 0, 2, true);
+            encoderDrive(.5, 16, forward, 0, 2, true);
+            encoderDrive(.5, 6, reverse, 0, 2, true);
 
         }else{
-            encoderDrive(.25, 7, forward, -30, 2, false);
-            encoderDrive(.35, 5, forward, -30, 2, true);
+            encoderDrive(.5, 18, forward, -30, 2, true);
+            encoderDrive(.5, 5, reverse, -30, 2, true);
         }
         setIntakePower(0);
     }
