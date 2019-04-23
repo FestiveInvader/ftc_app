@@ -9,7 +9,7 @@ public class BaseAuton extends DeclarationsAutonomous {
     public void runOpMode() {
         super.runOpMode();
         int loops = 0;
-        encoderDrive(.3, 54,forward,stayOnHeading,10, true);
+        encoderDrive(.3, 54,forward,stayOnHeading,10, 55);
         //endAuto();
     }
 }

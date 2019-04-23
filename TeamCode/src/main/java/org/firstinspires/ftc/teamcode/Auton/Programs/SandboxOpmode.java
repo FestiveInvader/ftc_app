@@ -11,6 +11,6 @@ public class SandboxOpmode extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {
         super.runOpMode();
-        extendMineralArm(14);
+        autonCycle();
     }
 }

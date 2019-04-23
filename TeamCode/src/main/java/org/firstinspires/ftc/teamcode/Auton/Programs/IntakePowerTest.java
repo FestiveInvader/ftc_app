@@ -3,7 +3,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Auton.DeclarationsAutonomous;
 
-@Autonomous(name="Test intake servos ", group="Test")
+@Autonomous(name="TEST - INTAKE SERVOS", group="Test")
 public class IntakePowerTest extends DeclarationsAutonomous {
     @Override
     public void runOpMode() {

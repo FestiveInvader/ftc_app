@@ -16,7 +16,7 @@ public class DepotBaseAuton extends DeclarationsAutonomous {
         endAuto(false);//Housekeeping, make sure slide is down, etc.
         //Potentially make a depot option that will go park in our crater side by going under the lander?
         //It'd be sweet}
-        encoderDrive(.25, 2, forward,stayOnHeading,3,false);
+        encoderDrive(.25, 2, forward,stayOnHeading,3,armDownRotation);
 
     }
 }

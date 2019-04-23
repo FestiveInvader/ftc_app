@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Teleop;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -15,6 +16,7 @@ import static com.qualcomm.robotcore.util.Range.clip;
 
 
 @TeleOp(name="Teleop Test", group="TELEOP")
+@Disabled
 public class Teleop3 extends OpMode {
     // This section declares hardware for the program, such as Motors, servos and sensors
 

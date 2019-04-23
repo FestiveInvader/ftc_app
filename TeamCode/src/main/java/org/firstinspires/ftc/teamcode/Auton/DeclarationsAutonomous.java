@@ -83,9 +83,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
     double hangCamRightEngagedPos = 0;
     double hangCamRightUnengagedPos = 1;
 
-    double armDrivingPos = 50;
-    double armScoringPos = 65;
-    double armDownRotation = 90;
+    public int armDrivingPos = 50;
+    public int armScoringPos = 65;
+    public int armDownRotation = 90;
     double armPVal = .02;
     double armPower;
 
@@ -187,6 +187,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
         } else {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
+        HangCamLeft.setPosition(hangCamLeftEngagedPos);
+        HangCamRight.setPosition(hangCamRightEngagedPos);
         while(!opModeIsActive()&&!isStopRequested()) {
             //telemetry.addData("IMU", imuTurning.getHeading());
             telemetry.addData("FrontLeft Encoder", LeftTop.getCurrentPosition());
@@ -223,7 +225,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
     //End TensorFlow functions (not movement based on TF)
 
     // Start General movement functions
-    public void encoderDrive(double speed, double Inches, int direction, double heading, double timeout, boolean armUp) {
+    public void encoderDrive(double speed, double Inches, int direction, double heading, double timeout, int armUp) {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
@@ -251,10 +253,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 //use gyrodrive to set power to the motors.  We have the Heading Var decied earlier,
                 // and speed and direction change base off of speed and direciton given by the user
                 gyroDrive(Heading, speed, direction);
-                if(armUp) {
-                    unextendHangSlide(true);
+                if(armUp != armDownRotation) {
+                    unextendHangSlide(true, armUp);
                 }else{
-                    unextendHangSlide(false);
+                    unextendHangSlide(false, armUp);
                 }
             }
             ArmTop.setPower(0);
@@ -266,7 +268,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         double startTime = runtime.seconds();
         double Heading = 0;
         boolean notAtTarget = true;
-        unextendHangSlide(true);
+        unextendHangSlide(true, 55);
         //if we give a very very specific value for our heading, than we stay on our current path
         //otherwise, we get use the gyroDrive to correct to our desired heading
         if (heading == 84.17){
@@ -291,6 +293,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 //use gyrodrive to set power to the motors.  We have the Heading Var decied earlier,
                 // and speed and direction change base off of speed and direciton given by the user
                 gyroDrive(Heading, speed, direction);
+                keepMineralArmUp(armDrivingPos);
             }
         }
     }
@@ -315,7 +318,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //still run through the loop, rather than
         double timer = runtime.seconds() + 2;
         while(errorCount < 5 && opModeIsActive() && timer > runtime.seconds()){
-            unextendHangSlide(true);//make sure the hanging slide is going (or is) down
+            unextendHangSlide(true, 55);//make sure the hanging slide is going (or is) down
 
             //While we aren't within a degree of our target and the opmode is running
             //if the error has been less than the desired tolerance for 5 loops, terminate.  This keeps
@@ -444,14 +447,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
         //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
-        encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2, armDrivingPos);
         gyroTurn(turningSpeed, 18);
         double time = elapsedTime.seconds();
         while(goldPosition == 0 && elapsedTime.seconds() < time+2 && opModeIsActive()){
             //wait for 3 seconds to make sure TFOD has time to process the frames
             //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
             getGoldPositionOneMineral();
-            unextendHangSlide(true);
+            unextendHangSlide(true, 55);
         }
         if(goldPosition == 0){
             //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
@@ -488,16 +491,16 @@ public class DeclarationsAutonomous extends LinearOpMode {
         setIntakePower(0);*/
 
         if(goldPosition == 1){
-            encoderDrive(.75, 18, forward, 30, 2, true);
-            encoderDrive(.75, 11, reverse, 30, 2, true);
+            encoderDrive(.5, 19, forward, 30, 2, armDrivingPos);
+            encoderDrive(.5, 8, reverse, 30, 2, armDrivingPos);
 
         }else if(goldPosition == 2){
-            encoderDrive(.5, 16, forward, 0, 2, true);
-            encoderDrive(.5, 6, reverse, 0, 2, true);
+            encoderDrive(.5, 18, forward, 0, 2, armDrivingPos);
+            encoderDrive(.5, 8, reverse, 0, 2, armDrivingPos);
 
         }else{
-            encoderDrive(.5, 18, forward, -30, 2, true);
-            encoderDrive(.5, 5, reverse, -30, 2, true);
+            encoderDrive(.5, 19, forward, -30, 2, armDrivingPos);
+            encoderDrive(.5, 8, reverse, -30, 2, armDrivingPos);
         }
         setIntakePower(0);
     }
@@ -510,8 +513,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
             encoderDriveSmooth(.5, 8, reverse, 115, 1.5);
             encoderDriveSmooth(.5, 12, forward, 125, 1.5);
         }else{
-            encoderDrive(.65, 12, reverse, -decideSecondSampleheading(), 2, true);
-            encoderDrive(.75, 24, forward, 90, 2, true);
+            encoderDrive(.65, 12, reverse, -decideSecondSampleheading(), 2, armDrivingPos);
+            encoderDrive(.75, 24, forward, 90, 2, armDrivingPos);
         }
         deployTeamMarker();
         encoderDriveSmooth(.75, 12, reverse, 145, 3);
@@ -526,23 +529,24 @@ public class DeclarationsAutonomous extends LinearOpMode {
             telemetry.update();
         }
        //make this sleep(runtime - wanted time ) or something
-        encoderDrive(.5, 46, forward, 80, 2.5, true);
+        encoderDrive(.75, 22, forward, 80, 2.5, armDrivingPos);
+        encoderDrive(.5, 18, forward, 80, 2.5, armDrivingPos);
         gyroTurn(turningSpeed, -128);//turn to the left, facing the depot
         double currentDistance = 200;
-        encoderDrive(.9, inches-12, forward, 130, 3, true);
+        encoderDrive(.9, inches-12, forward, 130, 3, armDrivingPos);
         //allow for team marker to begin deployment before actually being in the depot
         TeamMarker.setPower(1);
-        encoderDrive(.9, 6, forward, 130, 3, true);
+        encoderDrive(.9, 6, forward, 130, 3, armDrivingPos);
     }
     public void craterSidePark(){
-        encoderDrive(.85, 52, reverse, 135, 3.5, true);
+        encoderDrive(.85, 52, reverse, 135, 3.5, armDrivingPos);
     }
 
     public void craterSideParkArmInCrater(){
         encoderDriveSmooth(.5, 16, reverse, 133, 3);
-        encoderDriveSmooth(.5, 6, reverse, 110, 3);
-        encoderDriveSmooth(.5, 6, reverse, 120, 3);
-        encoderDriveSmooth(.5, 18, reverse, 80, 3);
+        encoderDriveSmooth(.5, 4, reverse, 110, 3);
+        encoderDriveSmooth(.5, 4, reverse, 120, 3);
+        encoderDriveSmooth(.75, 20, reverse, 80, 3);
         gyroTurn(turningSpeed, 0);
     }
     //End Crater Side functions
@@ -555,14 +559,14 @@ public class DeclarationsAutonomous extends LinearOpMode {
         //for the most part this should be able to be copy/pasted to the depotSideSample, though a few changes
         //for the team marker may have to be made.
         //gyroTurn(turningSpeed, 0); Removed, we never need to re-align after dropping.
-        encoderDrive(.35, 2, 1, stayOnHeading, 2, true);
+        encoderDrive(.35, 2, 1, stayOnHeading, 2, armDrivingPos);
         gyroTurn(turningSpeed, 15);
         double time = elapsedTime.seconds();
         while(goldPosition == 0 && elapsedTime.seconds() < time+2 && opModeIsActive()){
             //wait for 3 seconds to make sure TFOD has time to process the frames
             //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
             getGoldPositionOneMineral();
-            unextendHangSlide(true);
+            unextendHangSlide(true, armDrivingPos);
         }
         if(goldPosition == 0){
             //failsafe, so that if this doesn't detect the right two minerals at least we'll still place
@@ -573,25 +577,25 @@ public class DeclarationsAutonomous extends LinearOpMode {
         gyroTurn(turningSpeed, decideFirstSampleheading());
 
         if(goldPosition == 1){
-            encoderDrive(.3, 4, reverse, 30, 2, true);
+            encoderDrive(.3, 4, reverse, 30, 2, armDrivingPos);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.3, 7, forward, 30, 2, false);
-            encoderDrive(.35, 5, forward, 30, 2, true);
+            encoderDrive(.3, 7, forward, 30, 2, armDownRotation);
+            encoderDrive(.35, 5, forward, 30, 2, armDrivingPos);
 
         }else if(goldPosition == 2){
-            encoderDrive(.3, 4, reverse, 0, 2, true);
+            encoderDrive(.3, 4, reverse, 0, 2, armDrivingPos);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.3, 3, forward, 0, 2, false);
-            encoderDrive(.35, 7, forward, 0, 2, true);
+            encoderDrive(.3, 3, forward, 0, 2, armDownRotation);
+            encoderDrive(.35, 7, forward, 0, 2, armDrivingPos);
 
         }else{
-            encoderDrive(.3, 4, reverse, -30, 2, true);
+            encoderDrive(.3, 4, reverse, -30, 2, armDrivingPos);
             putArmDown();
             setIntakePower(.7);
-            encoderDrive(.3, 7, forward, -30, 2, false);
-            encoderDrive(.35, 5, forward, -30, 2, true);
+            encoderDrive(.3, 7, forward, -30, 2, armDownRotation);
+            encoderDrive(.35, 5, forward, -30, 2, armDrivingPos);
         }
         setIntakePower(0);
     }
@@ -628,22 +632,22 @@ public class DeclarationsAutonomous extends LinearOpMode {
             gyroTurn(turningSpeed, 49);
             encoderDrive(.75, 36, reverse, -47, 5, true);
         }*/
-        encoderDrive(.5, 46, forward, 80, 2.5, true);
-        encoderDrive(.5, 1, reverse, 80, 2, true);
+        encoderDrive(.5, 46, forward, 80, 2.5, armDrivingPos);
+        encoderDrive(.5, 2, reverse, 80, 2, armDrivingPos);
         gyroTurn(turningSpeed, 35);
         //should stay at 24 inches, adjust other parts to get proper distance
         encoderDriveSmooth(.9, 8, forward, -37, 5);
         encoderDriveSmooth(.9, 8, forward, -42, 5);
         TeamMarker.setPower(1);
-        encoderDrive(.9, 18, forward, -45, 5, true);
+        encoderDrive(.9, 18, forward, -45, 5, armDrivingPos);
         TeamMarker.setPower(0);
-        encoderDriveSmooth(.9, 12, reverse, -43, 5);
+        encoderDriveSmooth(.9, 16, reverse, -43, 5);
         encoderDriveSmooth(.75, 18, reverse, -25, 5);
         stopDriveMotors();
         gyroTurn(turningSpeed, -35);
         encoderDriveSmooth(.5, 2, reverse, 35, 5);
         stopDriveMotors();
-        gyroTurn(turningSpeed, -127);
+        gyroTurn(turningSpeed, -115);
         stopDriveMotors();
     }
     //End Depot Side Functions
@@ -767,19 +771,19 @@ public class DeclarationsAutonomous extends LinearOpMode {
         HangCamRight.setPosition(hangCamRightUnengagedPos);
         double timer = runtime.seconds() + 1;
         while(timer > runtime.seconds() && opModeIsActive()){
-            keepMineralArmUp();
+            keepMineralArmUp(55);
         }
         double newTimer = runtime.seconds() + 6;
 
         while(HangingSlide.isBusy() && newTimer > runtime.seconds() && opModeIsActive()){
             HangingSlide.setPower(1);
-            keepMineralArmUp();
+            keepMineralArmUp(55);
         }
         HangingSlide.setPower(0);
         ArmTop.setPower(0);
         ArmBottom.setPower(0);
     }
-    public void unextendHangSlide(boolean keepArmUp){
+    public void unextendHangSlide(boolean keepArmUp, int angle){
         //this is made so it can be in a loop by itself, or in another loop.
         HangingSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         HangingSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -792,7 +796,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }
         if (keepArmUp) {
-            keepMineralArmUp();
+            keepMineralArmUp(angle);
         }
     }
     public boolean hangSlideIsExtended(){
@@ -805,10 +809,10 @@ public class DeclarationsAutonomous extends LinearOpMode {
     //End hanging system code
 
     //Start mineral system code
-    public void rotateArm(int desiredRot) {
+    public void rotateArm(double desiredRot) {
         while(opModeIsActive() && !armIsDown()) {
             double armRotError = (Math.abs(potRotation())-Math.abs(desiredRot));
-            armPower = Range.clip(armRotError*armPVal, -.5, .5);
+            armPower = Range.clip(armRotError*armPVal, -1, 1);
             ArmTop.setPower(armPower);
             ArmBottom.setPower(armPower);
         }
@@ -830,15 +834,42 @@ public class DeclarationsAutonomous extends LinearOpMode {
             return true;
         }
     }
-    public void keepMineralArmUp(){
-        double armRotError = (Math.abs(potRotation())-Math.abs(armDrivingPos));
+
+    public void putArmUp() {
+        while(opModeIsActive() && !armIsUp()) {
+            putMineralArmUp();
+            setIntakePower(.8);
+        }
+        ArmTop.setPower(0);
+        ArmBottom.setPower(0);
+    }
+    public boolean armIsUp() {
+        if (potRotation() < armScoringPos) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public void keepMineralArmUp(int angle){
+        double armRotError = (Math.abs(potRotation())-Math.abs(angle));
 
         armPower = Range.clip(armRotError*armPVal, -1, 1);
         ArmTop.setPower(armPower);
         ArmBottom.setPower(armPower);
+        if(angle == armScoringPos){
+            setIntakePower(.6);
+        }
     }
     public void putMineralArmDown(){
         double armRotError = (Math.abs(potRotation())-Math.abs(armDownRotation));
+
+        armPower = armRotError*armPVal;
+        ArmTop.setPower(armPower);
+        ArmBottom.setPower(armPower);
+    }
+    public void putMineralArmUp(){
+        double armRotError = (Math.abs(potRotation())-Math.abs(75));
 
         armPower = armRotError*armPVal;
         ArmTop.setPower(armPower);
@@ -851,8 +882,8 @@ public class DeclarationsAutonomous extends LinearOpMode {
     public void extendMineralArm(int inchesToExtend){
         ArmSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         ArmSlide.setTargetPosition(ArmSlide.getCurrentPosition() + (int) (ticksToExtendMineralArmInch * inchesToExtend));
-        double timer = runtime.seconds() + 1;
-        while(ArmSlide.isBusy() && opModeIsActive()){
+        double timer = runtime.seconds() + 2.5;
+        while(ArmSlide.isBusy() && opModeIsActive() && runtime.seconds() < timer){
             ArmSlide.setPower(1);
             setIntakePower(.8);
             telemetry.addData("Target", ArmSlide.getTargetPosition());
@@ -865,7 +896,6 @@ public class DeclarationsAutonomous extends LinearOpMode {
         Range.clip(power, -.7, .7);//393s have a power limit of .7.  Higher and they won't spin
         IntakeLeft.setPower(power);
         IntakeRight.setPower(power);
-        IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
     }
     //End mineral system code
 
@@ -886,7 +916,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         TeamMarker.setPower(0);
         if(endWithArmUp) {
             while (opModeIsActive() && hangSlideIsExtended()) {
-                unextendHangSlide(true);
+                unextendHangSlide(true, armDrivingPos);
             }
         }else{
             //ending with arm parked in crater
@@ -894,14 +924,49 @@ public class DeclarationsAutonomous extends LinearOpMode {
             while (opModeIsActive() && potRotation() < armDownRotation - 10) {
                 putMineralArmDown();
                 if (hangSlideIsExtended()) {
-                    unextendHangSlide(false);
+                    unextendHangSlide(false, armDownRotation);
                 } else {
                     HangingSlide.setPower(0);
                 }
             }
-            extendMineralArm(14);
+            extendMineralArm(13);
         }
+        setIntakePower(0);
         telemetry.addData("No Glyphs", "Cuz that was last year");
         telemetry.update();
+    }
+    public void autonCycle(){
+        double timer = runtime.seconds() + 3;
+        while(opModeIsActive() && runtime.seconds() < timer-2.75){
+            setIntakePower(-.45);
+        }
+        if(opModeIsActive() && runtime.seconds() < 24) {
+            setIntakePower(.4);
+            encoderDrive(.65, 12, reverse, -9, 3, 63);
+            while(runtime.seconds() < 25){
+                sleep(20);
+                telemetry.addData("thing", 1);
+                telemetry.update();
+            }
+            IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+            while (runtime.seconds() < timer && runtime.seconds() < 28 && opModeIsActive()){
+                setIntakePower(.6);
+                IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
+                if(potRotation() > 40) {
+                    ArmTop.setPower(.25);
+                    ArmTop.setPower(.25);
+                }else{
+                    ArmTop.setPower(0);
+                    ArmTop.setPower(0);
+                }
+            }
+            putArmUp();
+            encoderDrive(.95, 8, forward, 0, 1, armDownRotation);
+            putArmDown();
+            //encoderDrive(.5, 4, forward, 0, 1, false);
+        }
+        while(opModeIsActive()){
+            setIntakePower(.8);
+        }
     }
 }
