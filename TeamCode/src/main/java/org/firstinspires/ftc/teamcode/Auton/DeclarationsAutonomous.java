@@ -450,7 +450,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         encoderDrive(.35, 2, 1, stayOnHeading, 2, armDrivingPos);
         gyroTurn(turningSpeed, 18);
         double time = elapsedTime.seconds();
-        while(goldPosition == 0 && elapsedTime.seconds() < time+2 && opModeIsActive()){
+        while(goldPosition == 0 && elapsedTime.seconds() < time+2.25 && opModeIsActive()){
             //wait for 3 seconds to make sure TFOD has time to process the frames
             //Otherwise, we may get incorrect readings, since it may have just not seen a mineral in time
             getGoldPositionOneMineral();
@@ -940,12 +940,12 @@ public class DeclarationsAutonomous extends LinearOpMode {
         while(opModeIsActive() && runtime.seconds() < timer-2.75){
             setIntakePower(-.45);
         }
-        if(opModeIsActive() && runtime.seconds() < 24) {
+        if(opModeIsActive() && runtime.seconds() < 26) {
             setIntakePower(.4);
             encoderDrive(.65, 12, reverse, -9, 3, 63);
-            while(runtime.seconds() < 25){
+            while(runtime.seconds() < 26.5){
                 sleep(20);
-                telemetry.addData("thing", 1);
+                telemetry.addData("waiting...", 1);
                 telemetry.update();
             }
             IntakeFlapLeft.setPosition(intakeFlapLeftClosed);
@@ -961,6 +961,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
                 }
             }
             putArmUp();
+            IntakeFlapLeft.setPosition(intakeFlapLeftOpen);
             encoderDrive(.95, 8, forward, 0, 1, armDownRotation);
             putArmDown();
             //encoderDrive(.5, 4, forward, 0, 1, false);
