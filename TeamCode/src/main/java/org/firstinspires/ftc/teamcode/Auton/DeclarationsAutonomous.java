@@ -920,7 +920,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
             }
         }else{
             //ending with arm parked in crater
-            setIntakePower(.8);
+            setIntakePower(.6);
             while (opModeIsActive() && potRotation() < armDownRotation - 10) {
                 putMineralArmDown();
                 if (hangSlideIsExtended()) {
@@ -942,7 +942,7 @@ public class DeclarationsAutonomous extends LinearOpMode {
         }
         if(opModeIsActive() && runtime.seconds() < 26) {
             setIntakePower(.4);
-            encoderDrive(.65, 12, reverse, -9, 3, 63);
+            encoderDrive(.65, 12, reverse, -8, 3, 63);
             while(runtime.seconds() < 26.5){
                 sleep(20);
                 telemetry.addData("waiting...", 1);
