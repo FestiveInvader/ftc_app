@@ -310,9 +310,9 @@ public class DeclarationsAutonomous extends LinearOpMode {
         // for this otherwise we won't decelerate for our target in time
         double error = getError(-angle);//set to a lower number so that if we are starting with a 0 heading it'll
         double turningSpeedError = 0;
-        double desiredRotSpeed = .4;
-        double Kp = .01;
-        double Kd = .215;
+        double desiredRotSpeed = .45;
+        double Kp = .011;
+        double Kd = .225;
         int errorCount = 0;
         int toleranceDegrees = 2;
         //still run through the loop, rather than
